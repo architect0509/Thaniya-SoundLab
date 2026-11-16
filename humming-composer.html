@@ -231,6 +231,7 @@ canvas.viz{display:block;width:100%;height:104px;border-radius:9px;border:1px so
 .engOnly{display:none!important}
 body.engine .engOnly{display:flex!important}
 body.engine #mpHome,body.engine .lgName{display:none}
+body.engine .logo{pointer-events:none;cursor:default}
 .ib.engSave{background:var(--accent);color:#1a1500;border-color:var(--accent)}
 .ib.engSave:hover{background:#ffd95a}
 .ib.engSave.busy{opacity:.6;pointer-events:none}
@@ -4209,12 +4210,13 @@ window.addEventListener('resize', () => { layout(); placePal(); });
 // 랩 → 엔진  soundlab:ready · soundlab:loaded {token,name} · soundlab:load-error {token,msg}
 //            soundlab:export {rid,lib,name,project,wav,dur,size,mime,loop} · soundlab:export-error {rid,msg} · soundlab:save (엔진에 저장 버튼 · Ctrl+S)
 // 엔진이 올라가 있는 주소만 받습니다. 엔진을 다른 주소에 올리면 여기에 추가하세요.
-const ENG_ORIGINS = [/^https:\/\/architect0509\.github\.io$/, /^https:\/\/(www\.)?thaniya\.co\.kr$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+// 'null' = 내 컴퓨터에서 파일로 연 엔진 (file://) · localhost · 같은 네트워크(192.168.x.x 등)의 테스트 서버도 허용
+const ENG_ORIGINS = [/^https:\/\/architect0509\.github\.io$/, /^https:\/\/(www\.)?thaniya\.co\.kr$/, /^null$/, /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/];
 const ENG = { on: new URLSearchParams(location.search).has('engine') && window.parent !== window, origin: null, busy: false };
 function engPost(msg, data = true) {
   if (!ENG.on) return false;
   if (data && !ENG.origin) return false;   // 곡 데이터는 연결이 확인된 엔진에게만
-  try { window.parent.postMessage(msg, data ? ENG.origin : '*'); return true; } catch (e) { return false; }
+  try { window.parent.postMessage(msg, data && ENG.origin !== 'null' ? ENG.origin : '*'); return true; } catch (e) { return false; }
 }
 let engState = '';
 function engTag(txt) { engState = txt; }
@@ -4260,7 +4262,8 @@ function engLoadSong(d) {
   }
 }
 // 곡 전체를 오프라인으로 렌더링 → WAV (뮤트 · 솔로 상태 그대로)
-async function renderSongWav(loop) {
+async function renderSongWav(loop, onProg) {
+  const prog = p => { try { onProg && onProg(p); } catch (e) {} };
   const playable = S.notes.filter(n => audible(trk(n.t)));
   if (!playable.length) throw new Error('저장할 노트가 없어요 (뮤트/솔로 상태도 확인해 보세요)');
   const ss = stepSec(); let endStep = 0;
@@ -4282,7 +4285,16 @@ async function renderSongWav(loop) {
     Object.keys(buses).forEach(k => delete buses[k]); Object.assign(buses, keep.buses);
     for (const o of [...voices]) if (!before.has(o)) voices.delete(o);   // 정지 버튼이 렌더링을 끊지 않게
   }
+  if (oc.suspend) {   // 렌더링 진행률: 20번 잠깐 멈춰서 알려 줌
+    const N = 20, q = 128 / sr, done = new Set();
+    for (let i = 1; i < N; i++) {
+      const t = Math.round(total * i / N / q) * q; if (t <= 0 || t >= total || done.has(t)) continue; done.add(t);
+      oc.suspend(t).then(() => { prog(i / N * 0.9); oc.resume(); }).catch(() => {});
+    }
+  }
+  prog(0);
   const buf = await oc.startRendering();
+  prog(0.9); await yieldUI();
   const chs = [buf.getChannelData(0), buf.getChannelData(1)];
   let len;
   if (loop) {   // 잔향 꼬리를 곡 앞쪽에 겹쳐서 반복할 때 끊김 없이
@@ -4301,6 +4313,7 @@ async function renderSongWav(loop) {
   v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, sr, true);
   v.setUint32(28, sr * 4, true); v.setUint16(32, 4, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, len * 4, true);
   for (let i = 0, o = 44; i < len; i++) for (let c = 0; c < 2; c++, o += 2) { const x = clamp(chs[c][i] * g, -1, 1); v.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+  prog(0.96); await yieldUI();
   const blob = new Blob([ab], { type: 'audio/wav' });
   const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('오디오를 읽지 못했어요')); r.readAsDataURL(blob); });
   return { url, dur: len / sr, size: blob.size };
@@ -4313,7 +4326,8 @@ async function engExport(rid, loop) {
   ENG.busy = true; $('engSaveBtn').classList.add('busy'); toast('오디오로 만드는 중…');
   try {
     save();
-    const lib = LIB.cur, it = curItem(), r = await renderSongWav(!!loop);
+    let last = -1;
+    const lib = LIB.cur, it = curItem(), r = await renderSongWav(!!loop, p => { const pct = Math.round(p * 100); if (pct !== last) { last = pct; engPost({ type: 'soundlab:progress', rid, pct }); } });
     engPost({ type: 'soundlab:export', rid, lib, name: it ? it.name : '음악', project: JSON.parse(JSON.stringify(pickProject(S))), wav: r.url, dur: r.dur, size: r.size, mime: 'audio/wav', loop: !!loop });
   } catch (e) { fail(e.message || '오디오로 만들지 못했어요'); }
   finally { ENG.busy = false; $('engSaveBtn').classList.remove('busy'); }
@@ -4325,11 +4339,15 @@ if (ENG.on) {
   document.body.classList.add('engine');
   engTag('wait');
   $('engSaveBtn').onclick = engAskSave;
+  { const lg = $('logoBtn'); lg.onclick = null; lg.tabIndex = -1; lg.removeAttribute('title'); }   // 왼쪽 위 아이콘: 엔진 창 안에서는 링크 끔
   // 마이페이지의 '홈' 링크는 엔진 창 안에서 SoundLab 홈으로 넘어가지 않게
   document.querySelectorAll('.mpBrand').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openProject(LIB.cur); }));
   window.addEventListener('message', e => {
     if (e.source !== window.parent) return;
-    if (!(e.origin === location.origin || ENG_ORIGINS.some(r => r.test(e.origin)))) return;
+    if (!(e.origin === location.origin || ENG_ORIGINS.some(r => r.test(e.origin)))) {   // 허용하지 않은 주소: 이유를 알려 줌 (데이터 없음)
+      if (e.data && e.data.type === 'thaniya-engine:hello') try { window.parent.postMessage({ type: 'soundlab:reject', origin: e.origin }, '*'); } catch (er) {}
+      return;
+    }
     if (ENG.origin && e.origin !== ENG.origin) return;
     const d = e.data; if (!d || typeof d !== 'object' || typeof d.type !== 'string') return;
     if (d.type === 'thaniya-engine:hello') {
@@ -4347,7 +4365,7 @@ if (ENG.on) {
       engTag('saved'); toast(`엔진에 '${String(d.name || '')}'(으)로 저장했어요`);
     }
   });
-  engPost({ type: 'soundlab:ready', version: 1 }, false);   // 데이터 없는 신호 · 엔진이 hello로 답함
+  engPost({ type: 'soundlab:hi', version: 1 }, false);   // 데이터 없는 신호 · 엔진이 hello로 답하면 주소를 확인하고 ready
 }
 
 // ───────── 시작 ─────────
