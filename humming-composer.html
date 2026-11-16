@@ -55,7 +55,8 @@ svg.i{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .stk{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:10px;line-height:1}
 select,input[type=number],input[type=text],input[type=search]{background:#0f1013;color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:3px 6px;font:inherit;font-size:11.5px;outline:none}
 select:focus,input:focus{border-color:var(--accentLine)}
-input[type=number]{width:52px}
+input[type=number]{width:52px;-moz-appearance:textfield;appearance:textfield;text-align:center}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=range]{accent-color:var(--accent);min-width:0}
 input[type=color]{width:26px;height:24px;border:1px solid var(--line2);background:#0f1013;border-radius:6px;padding:2px;cursor:pointer}
 #zoomVal{font:11px ui-monospace,monospace;color:var(--muted);min-width:38px;text-align:center}
@@ -430,6 +431,103 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
 [data-logo]{position:relative;overflow:hidden}
 [data-logo].has-img{background:none!important;box-shadow:none!important}
 .logo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none}
+
+/* 스텝 입력 (Musical Typing) 창 */
+#stepModal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;z-index:85}
+#stepModal.show{display:flex}
+#stepModal.show ~ #toast{z-index:90}
+.scard{width:min(1000px,96vw);max-height:94vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line2);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.scard .mhead{flex-wrap:wrap;row-gap:8px}
+.siTitle{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px}
+.siTitle svg.i{width:18px;height:18px;color:var(--accent)}
+.siTitle small{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.3px}
+.siGrp{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:11.5px}
+.siGrp .atabs{padding:2px}
+.siGrp .atab{padding:4px 9px;font-size:11.5px}
+.siOct{display:flex;align-items:center;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:2px}
+.siOct b{min-width:74px;text-align:center;color:var(--text);font-size:12px}
+.siOct .ib{min-width:26px;height:24px}
+.siOct .ib kbd{font-size:10px}
+.sbody{overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:12px}
+.siTop{display:grid;grid-template-columns:210px 1fr;gap:12px;align-items:stretch}
+.siNow{background:#0d0e11;border:1px solid var(--line2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;justify-content:space-between}
+.siNow .lbl{color:var(--muted);font-size:10.5px;font-weight:700}
+.siNow .nm{font-size:26px;font-weight:900;color:var(--accent);line-height:1.15;min-height:32px;word-break:keep-all}
+.siNow .nm.idle{color:#4d525b;font-size:15px;font-weight:700}
+.siNow .sub{color:var(--muted);font-size:11px}
+.siNow .btn{justify-content:center;padding:6px 10px}
+/* 컴퓨터 키보드 가이드 */
+.siKb{background:#0d0e11;border:1px solid var(--line2);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;user-select:none}
+.siKb .kr{display:flex;gap:4px}
+.siKb .kc{width:46px;height:40px;flex:none;border-radius:7px;border:1px solid #2b2e35;background:#16181c;display:flex;flex-direction:column;justify-content:space-between;padding:3px 5px;position:relative;transition:transform .05s,background .05s}
+.siKb .kc .k{font:700 11px ui-monospace,monospace;color:#9aa0aa}
+.siKb .kc .n{font-size:10.5px;font-weight:800;color:#3d4149;text-align:right;white-space:nowrap}
+.siKb .kc.w{background:#e9e7e1;border-color:#cfccc4}
+.siKb .kc.w .k{color:#55524b}.siKb .kc.w .n{color:#1a1a1a}
+.siKb .kc.b{background:#24262c;border-color:#3a3d45}
+.siKb .kc.b .k{color:#c7cbd2}.siKb .kc.b .n{color:#f2c230}
+.siKb .kc.fn{background:#1b1d22;border-color:var(--accentLine)}
+.siKb .kc.fn .k{color:var(--accent)}.siKb .kc.fn .n{color:#c9ccd2;font-size:9.5px}
+.siKb .kc.on{background:var(--accent)!important;border-color:var(--accent)!important;transform:translateY(1px)}
+.siKb .kc.on .k,.siKb .kc.on .n{color:#1a1500!important}
+.siKb .kc.wide{width:auto;flex:1;min-width:60px}
+.siKb .legend{display:flex;gap:12px;color:var(--muted);font-size:10.5px;margin-top:2px;flex-wrap:wrap}
+.siKb .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+/* 피아노 */
+#siPiano{position:relative;height:96px;border-radius:10px;overflow:hidden;background:#0d0e11;border:1px solid var(--line2);user-select:none;touch-action:none}
+#siPiano .pk{position:absolute;top:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;font-size:10px;padding-bottom:4px;gap:1px}
+#siPiano .pk.w{height:100%;background:linear-gradient(#f4f2ec,#dedbd2);border-right:1px solid #9c998f;color:#222;z-index:1}
+#siPiano .pk.b{height:60%;background:linear-gradient(#2b2d33,#111215);border:1px solid #000;border-top:none;border-radius:0 0 4px 4px;color:#d7dae0;z-index:2}
+#siPiano .pk kbd{font-size:10px;padding:0 3px;background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.25);color:inherit}
+#siPiano .pk.b kbd{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+#siPiano .pk .pn{font-weight:700;opacity:.65}
+#siPiano .pk.on.w{background:linear-gradient(#ffe48a,#f2c230)}
+#siPiano .pk.on.b{background:linear-gradient(#f2c230,#b38b10);color:#1a1500}
+#siPiano .pk.pend{box-shadow:inset 0 -4px 0 var(--accent)}
+#siPiano .pk.off{opacity:.35;pointer-events:none}
+#siPiano.remap .pk{outline:1px dashed rgba(242,194,48,.35);outline-offset:-3px}
+#siPiano .pk.wait{animation:siBlink .7s infinite}
+@keyframes siBlink{50%{background:var(--accent);color:#1a1500}}
+.siRemapBar{display:none;align-items:center;gap:10px;background:var(--accentDim);border:1px solid var(--accentLine);border-radius:10px;padding:7px 10px;font-size:11.5px;color:var(--text)}
+.siRemapBar.show{display:flex}
+.siRemapBar b{color:var(--accent)}
+.btn.on{background:var(--accentDim);border-color:var(--accentLine);color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:11.5px}
+/* 임시 보드 */
+.siBoardHead{display:flex;align-items:center;gap:8px}
+.siGuide{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:8px}
+.siGuide .g{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:5px 10px 5px 6px}
+.siGuide .gt{font-size:10.5px;font-weight:800;color:var(--accent);background:var(--accentDim);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.siGuide .it{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);white-space:nowrap}
+.siGuide .it b{color:var(--text);font-weight:700}
+.siGuide kbd{color:var(--text)}
+#siBoardWrap{height:210px;overflow-x:auto;overflow-y:hidden;border-radius:10px;border:1px solid var(--line2);background:#101114;position:relative}
+#siBoard{display:block;cursor:default;touch-action:none}
+
+/* 상단 바 — 작게 · 좁은 화면에서도 한 줄에 다 들어가게 */
+#topbar{gap:5px;padding:0 8px;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#topbar::-webkit-scrollbar{display:none}
+#topbar > *{flex-shrink:0}
+#topbar .ib{min-width:26px;height:25px;padding:0 3px;font-size:12px;border-radius:6px}
+#topbar .ib svg.i{width:15px;height:15px}
+#topbar .ib.wide{padding:0 8px;font-size:11.5px;gap:5px}
+#topbar .pill{padding:2px;gap:1px;border-radius:9px}
+#topbar select{font-size:11px;padding:2px 4px}
+#topbar .stk{font-size:9.5px}
+#topbar .sep{height:22px}
+#topbar .logo{font-size:12.5px;padding:2px 5px 2px 2px}
+#topbar .logo b{width:22px;height:22px}
+#topbar .songName{flex-shrink:1;width:140px;min-width:64px}
+#topbar #zoomVal{font-size:11px;min-width:34px;text-align:center}
+#topbar #palette.docked{padding:1px 3px}
+#topbar #palette.docked .ib{width:26px;height:25px}
+#topbar #palette.docked .pgrip{height:25px}
+#topbar .spacer{flex:1 1 0;min-width:4px}
+@media (max-width:1500px){ #topbar .lgName{display:none} }
+@media (max-width:1380px){ #topbar .ib.wide .wl{display:none} #topbar .ib.wide{padding:0 4px} #topbar .songName{width:110px} }
+@media (max-width:1200px){ #topbar .stk{font-size:0;gap:0} #topbar #zoomVal{display:none} #topbar .sep{display:none} #topbar{gap:4px} }
+@media (max-width:1050px){ #topbar .ib{min-width:24px;height:24px} #topbar .ib svg.i{width:14px;height:14px} #topbar #palette.docked .ib{width:24px;height:24px} #topbar .songName{width:86px} }
+@media (max-width:920px){ #topbar #key{max-width:78px} #topbar #labelMode{max-width:62px} #topbar .songName{width:64px} #topbar{padding:0 5px} }
 </style>
 </head>
 <body>
@@ -455,13 +553,8 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
     <button class="ib" id="undoBtn" data-icon="undo" title="되돌리기 (Ctrl+Z)"></button>
     <button class="ib" id="redoBtn" data-icon="redo" title="다시 실행 (Ctrl+Shift+Z)"></button>
   </div>
-  <div class="pill">
-    <button class="ib" id="copyBtn" data-icon="copy" title="복사 (Ctrl+C)"></button>
-    <button class="ib" id="pasteBtn" data-icon="paste" title="붙여넣기 (Ctrl+V) — 마우스를 따라다니다 클릭하면 놓기"></button>
-    <button class="ib" id="dupBtn" data-icon="dup" title="바로 뒤에 복제 (Ctrl+D)"></button>
-    <button class="ib" id="delBtn" data-icon="clear" title="선택한 노트 삭제 (Delete)"></button>
-  </div>
-  <div class="pill"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span>반주 · 비트</button></div>
+  <div class="pill"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span><span class="wl">반주 · 비트</span></button></div>
+  <div class="pill"><button class="ib wide" id="stepBtn" title="스텝 입력 (Musical Typing) — 컴퓨터 키보드로 건반을 쳐서 멜로디 넣기 (K)"><span data-icon="keys"></span><span class="wl">스텝 입력</span></button></div>
   <div class="spacer"></div>
   <div class="pill engOnly"><button class="ib engSave" id="engSaveBtn" data-icon="upload" title="이 곡을 Thaniya Engine 프로젝트에 오디오로 저장 (Ctrl+S)"></button></div>
   <div class="pill">
@@ -699,6 +792,66 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
     <button class="btn" id="accCancel">취소</button><button class="btn primary" id="accOk">반주 추가</button>
   </div>
 </div></div>
+<div id="stepModal"><div class="scard">
+  <div class="mhead">
+    <div class="siTitle"><span data-icon="keys"></span>스텝 입력 <small>MUSICAL TYPING</small></div>
+    <span style="width:6px"></span>
+    <div class="siGrp">옥타브
+      <div class="siOct"><button class="ib" id="siOctDn" title="옥타브 내리기"><kbd id="siOctDnK">-</kbd></button><b id="siOctV"></b><button class="ib" id="siOctUp" title="옥타브 올리기"><kbd id="siOctUpK">+</kbd></button></div>
+    </div>
+    <div class="siGrp">음 길이 <div class="atabs" id="siLens"></div><span class="mhint">(<kbd>;</kbd> <kbd>'</kbd>)</span></div>
+    <label class="chk" title="켜면 건반을 떼는 순간 바로 보드에 들어가요 (Enter 없이)"><input type="checkbox" id="siAuto">바로 입력</label>
+    <span style="flex:1"></span>
+    <button class="btn sm" id="siRemapBtn" title="연주 키를 내 손에 맞게 바꾸기"><span data-icon="rename"></span>연주 키 설정</button>
+    <button class="ib" id="siClose" data-icon="x" title="닫기 (Esc)"></button>
+  </div>
+  <div class="sbody">
+    <div class="siRemapBar" id="siRemapBar"><span id="siRemapMsg"></span><span style="flex:1"></span><button class="btn sm" id="siRemapReset">기본 배치로</button><button class="btn sm primary" id="siRemapDone">설정 끝</button></div>
+    <div class="siTop">
+      <div class="siNow">
+        <div><div class="lbl">지금 누른 음</div><div class="nm idle" id="siNowNm">건반을 눌러 보세요</div><div class="sub" id="siNowSub"></div></div>
+        <div><div class="sub" id="siPos" style="margin-bottom:6px"></div>
+        <button class="btn primary" id="siCommit" style="width:100%">보드에 넣기 (Space)</button>
+        <div style="display:flex;gap:6px;margin-top:6px"><button class="btn sm" id="siRest" style="flex:1" title="쉼표 — 지금 길이만큼 비우고 다음 칸으로 (Shift+Space)">쉼표</button><button class="btn sm" id="siBack" style="flex:1" title="마지막 음 지우기 (Backspace)">지우기</button></div></div>
+      </div>
+      <div class="siKb" id="siKb"></div>
+    </div>
+    <div id="siPiano"></div>
+    <div>
+      <div class="siBoardHead">
+        <div class="asecT" style="margin:0;white-space:nowrap">임시 보드</div>
+        <span style="flex:1"></span>
+        <button class="btn sm" id="siPlay" title="보드 전체 재생 · 정지 (Enter)"><span data-icon="play"></span>전체 재생</button>
+        <button class="btn sm" id="siUndo" title="보드 되돌리기 (Ctrl+Z)"><span data-icon="undo"></span></button>
+        <button class="btn sm" id="siClear" title="보드 비우기"><span data-icon="trash"></span></button>
+      </div>
+      <div id="siBoardWrap" style="margin-top:7px"><canvas id="siBoard"></canvas></div>
+      <div class="siGuide">
+        <div class="g"><span class="gt">입력 위치</span>
+          <span class="it"><kbd>A</kbd><kbd>→</kbd> 음 길이만큼 앞으로</span>
+          <span class="it"><kbd>←</kbd> 뒤로</span>
+          <span class="it"><b>빈 곳 클릭</b> 그 자리로</span></div>
+        <div class="g"><span class="gt">마우스</span>
+          <span class="it"><b>드래그</b> 옮기기</span>
+          <span class="it"><kbd>Shift</kbd>+<b>클릭</b> 여러 개 선택</span>
+          <span class="it"><b>우클릭</b> 삭제</span></div>
+        <div class="g"><span class="gt">선택한 노트</span>
+          <span class="it"><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd> 옮기기</span>
+          <span class="it"><kbd>↑</kbd><kbd>↓</kbd> 반음</span>
+          <span class="it"><kbd>Shift</kbd>+<kbd>↑</kbd><kbd>↓</kbd> 옥타브</span>
+          <span class="it"><kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd> 길이</span>
+          <span class="it"><kbd>Delete</kbd> 삭제</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="mfoot">
+    <label class="af">넣을 트랙<select id="siTrack"></select></label>
+    <label class="af">넣을 위치<select id="siWhere"><option value="head">재생 위치</option><option value="end">트랙 마지막 노트 뒤</option><option value="start">곡 처음</option></select></label>
+    <span class="mhint" id="siSum" style="margin-left:4px"></span>
+    <span style="flex:1"></span>
+    <button class="btn" id="siCancel">닫기</button><button class="btn primary" id="siExport"><span data-icon="download"></span>내보내기 (Ctrl+Enter)</button>
+  </div>
+</div></div>
 <div id="toast"></div>
 <div id="ctx"></div>
 <div id="help"><div class="card">
@@ -716,6 +869,7 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
     <tr><td><kbd>Ctrl</kbd>+Z / Shift+Z</td><td>되돌리기 / 다시 실행</td></tr>
     <tr><td><kbd>Space</kbd> 짧게 · <kbd>Shift</kbd>+<kbd>R</kbd> · <kbd>Esc</kbd></td><td>재생·정지 · 녹음 · 정지(선택 해제)</td></tr>
     <tr><td>반주 · 비트 <kbd>J</kbd></td><td>추천: 멜로디의 조·코드를 분석해 스타일별 반주 생성 · 샘플: 조와 코드 진행을 골라 반주 깔기 · 비트: 장르 비트 프리셋 + 16칸 스텝 편집(기본/필인), 스윙·사람 느낌 · 마디 줄은 편집 화면과 같이 스크롤</td></tr>
+    <tr><td>스텝 입력 <kbd>K</kbd></td><td>컴퓨터 키보드로 건반 연주 · <kbd>Z</kbd>~<kbd>M</kbd> = 도~시, <kbd>Q</kbd>~<kbd>]</kbd> = 한 옥타브 위 도~그 위 솔, 그 사이 윗줄 키 = 검은건반 · <kbd>-</kbd>/<kbd>+</kbd> 옥타브 · <kbd>Space</kbd> 보드에 넣기 · <kbd>Shift</kbd>+<kbd>Space</kbd> 쉼표 · <kbd>Enter</kbd> 보드 전체 재생/정지 · <kbd>A</kbd>·<kbd>←</kbd><kbd>→</kbd> 입력 위치를 음 길이만큼 이동 · <kbd>;</kbd>/<kbd>'</kbd> 음 길이 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 내보내기 · 창이 열린 동안 다른 단축키는 꺼져요 · 연주 키는 '연주 키 설정'에서 바꿀 수 있어요</td></tr>
     <tr><td>마이페이지</td><td>왼쪽 위 로고 아이콘 또는 <kbd>Ctrl</kbd>+O · 곡 목록, 새 곡, 이름 바꾸기, 복제, 삭제, 프로젝트(.json)/MIDI 불러오기·내보내기 · 곡의 '편집'을 누르면 에디터로</td></tr>
     <tr><td>트랙 목록</td><td>클릭: 선택 · 끌기: 순서 변경 · 우클릭: 메뉴 · 연필 버튼: 트랙 설정 · Ctrl/Shift+클릭: 여러 트랙 선택 · Ctrl+G: 폴더로 묶기</td></tr>
   </table>
@@ -3270,6 +3424,435 @@ $('accClose').onclick = closeAccomp;
 accM.addEventListener('pointerdown', e => { if (e.target === accM) closeAccomp(); });
 $('accBtn').onclick = openAccomp;
 
+// ───────── 스텝 입력 (Musical Typing) — 컴퓨터 키보드로 건반 연주 · 임시 보드에 쌓아서 내보내기 ─────────
+// 창이 열려 있는 동안에는 모든 키 입력을 이 창이 가져가요 (다른 단축키는 동작하지 않음).
+const stepM = $('stepModal');
+const SI_KEY = 'hc-stepinput';
+// 기본 배치: 아랫줄 Z~M = 도~시, 윗줄 Q~] = 한 옥타브 위 도 ~ 두 옥타브 위 솔, 그 사이 위의 키 = 검은건반
+// (윗줄 [ ] 사이의 '=' 는 옥타브 + 키라서 파#은 비워 둠 — '연주 키 설정'에서 넣을 수 있어요)
+const SI_DEF_MAP = { 0: 'KeyZ', 1: 'KeyS', 2: 'KeyX', 3: 'KeyD', 4: 'KeyC', 5: 'KeyV', 6: 'KeyG', 7: 'KeyB', 8: 'KeyH', 9: 'KeyN', 10: 'KeyJ', 11: 'KeyM',
+  12: 'KeyQ', 13: 'Digit2', 14: 'KeyW', 15: 'Digit3', 16: 'KeyE', 17: 'KeyR', 18: 'Digit5', 19: 'KeyT', 20: 'Digit6', 21: 'KeyY', 22: 'Digit7', 23: 'KeyU',
+  24: 'KeyI', 25: 'Digit9', 26: 'KeyO', 27: 'Digit0', 28: 'KeyP', 29: 'BracketLeft', 31: 'BracketRight' };
+const SI_SPAN = 32;   // 아랫줄 도부터 31반음 위(두 옥타브 위 솔)까지
+const SI_LENS = [[1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2'], [16, '1']];
+const SI_RESERVED = /^(Enter|NumpadEnter|Space|Escape|Backspace|Delete|Tab|Arrow|Shift|Control|Alt|Meta|CapsLock|F\d|ContextMenu|Lang|Convert|NonConvert|KanaMode|HangulMode|Hanja)/;
+const SI_KB_ROWS = [
+  ['Backquote', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'],
+  ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight', 'Backslash'],
+  ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote'],
+  ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash']];
+const SI_KB_INDENT = [0, 25, 37, 60];
+const SI_CODE_LBL = { Minus: '-', Equal: '+', BracketLeft: '[', BracketRight: ']', Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/', Backslash: '\\',
+  Backquote: '`', IntlBackslash: '\\', NumpadAdd: 'Num+', NumpadSubtract: 'Num−', NumpadMultiply: 'Num*', NumpadDivide: 'Num/', NumpadDecimal: 'Num.' };
+const siCodeLbl = c => !c ? '' : SI_CODE_LBL[c] || (c.startsWith('Key') ? c.slice(3) : c.startsWith('Digit') ? c.slice(5) : c.startsWith('Numpad') ? 'Num' + c.slice(6) : c);
+const SI = {
+  map: Object.assign({}, SI_DEF_MAP), octDn: 'Minus', octUp: 'Equal', oct: 4, len: 2, auto: false,
+  notes: [], cursor: 0, pending: [], held: new Map(), sel: new Set(), undo: [], redo: [],
+  remap: false, wait: null, drag: null, geo: null, playT: null, playing: false
+};
+(() => {
+  const o = lsGet(SI_KEY);
+  if (o && typeof o === 'object') {
+    if (o.map && typeof o.map === 'object') SI.map = o.map;
+    if (typeof o.octDn === 'string') SI.octDn = o.octDn;
+    if (typeof o.octUp === 'string') SI.octUp = o.octUp;
+    if (Number.isInteger(o.oct)) SI.oct = clamp(o.oct, 0, 6);
+    if (SI_LENS.some(l => l[0] === o.len)) SI.len = o.len;
+    SI.auto = !!o.auto;
+  }
+})();
+const siSaveCfg = () => lsSet(SI_KEY, { map: SI.map, octDn: SI.octDn, octUp: SI.octUp, oct: SI.oct, len: SI.len, auto: SI.auto });
+const siBase = () => 12 * (SI.oct + 1);
+const siTrack = () => trk(+$('siTrack').value) || activeTrack();
+const siIsBlack = p => [1, 3, 6, 8, 10].includes(((p % 12) + 12) % 12);
+function siCodeToOff(code) { for (const k in SI.map) if (SI.map[k] === code) return +k; return null; }
+const siPName = p => isDrumTrack(siTrack()) ? noteLabel(p, siTrack()) || name(p) : name(p);
+
+// ── 화면 그리기 ──
+function siBuildLens() {
+  const box = $('siLens'); box.innerHTML = '';
+  SI_LENS.forEach(([v, t]) => { const b = el('button', 'atab' + (v === SI.len ? ' on' : '')); b.textContent = t; b.title = `음 길이 ${t}`; b.onclick = () => siSetLen(v); box.appendChild(b); });
+}
+function siSetLen(v) { SI.len = v; siSaveCfg(); siBuildLens(); siInfo(); }
+function siBuildPiano() {
+  const pn = $('siPiano'); pn.innerHTML = ''; pn.classList.toggle('remap', SI.remap);
+  const base = siBase(), whites = [];
+  for (let o = 0; o < SI_SPAN; o++) if (!siIsBlack(base + o)) whites.push(o);
+  const W = 100 / whites.length;
+  for (let o = 0; o < SI_SPAN; o++) {
+    const p = base + o, blk = siIsBlack(p), code = SI.map[o];
+    const k = el('div', 'pk ' + (blk ? 'b' : 'w'));
+    k.dataset.off = o;
+    if (blk) { const wi = whites.filter(x => x < o).length; k.style.left = `calc(${wi * W}% - ${W * 0.3}%)`; k.style.width = W * 0.6 + '%'; }
+    else { k.style.left = whites.indexOf(o) * W + '%'; k.style.width = W + '%'; }
+    if (p > HIGH || p < LOW) k.classList.add('off');
+    k.innerHTML = (code ? `<kbd>${siCodeLbl(code)}</kbd>` : '') + `<span class="pn">${name(p)}</span>`;
+    k.title = `${name(p)}${code ? ' — 키 ' + siCodeLbl(code) : ' — 연결된 키 없음'}`;
+    pn.appendChild(k);
+  }
+  $('siOctV').textContent = `${name(base)} ~ ${name(Math.min(HIGH, base + SI_SPAN - 1))}`;
+  $('siOctDnK').textContent = siCodeLbl(SI.octDn); $('siOctUpK').textContent = siCodeLbl(SI.octUp);
+  siBuildKb(); siLights();
+}
+function siBuildKb() {   // 컴퓨터 키보드 모양 가이드 — 키마다 어떤 음인지
+  const kb = $('siKb'); kb.innerHTML = '';
+  const base = siBase();
+  SI_KB_ROWS.forEach((row, ri) => {
+    const r = el('div', 'kr'); r.style.paddingLeft = SI_KB_INDENT[ri] + 'px';
+    row.forEach(code => {
+      const off = siCodeToOff(code), c = el('div', 'kc');
+      c.dataset.code = code;
+      let n = '';
+      if (off != null) { const p = base + off; c.classList.add(siIsBlack(p) ? 'b' : 'w'); n = p <= HIGH ? name(p) : '—'; }
+      else if (code === SI.octDn) { c.classList.add('fn'); n = '옥타브−'; }
+      else if (code === SI.octUp) { c.classList.add('fn'); n = '옥타브+'; }
+      else if (code === 'Semicolon') { c.classList.add('fn'); n = '길이−'; }
+      else if (code === 'Quote') { c.classList.add('fn'); n = '길이+'; }
+      else if (code === 'KeyA') { c.classList.add('fn'); n = '음 길이 →'; }
+      c.innerHTML = `<span class="k">${siCodeLbl(code)}</span><span class="n">${n}</span>`;
+      r.appendChild(c);
+    });
+    if (ri === 2) { const e = el('div', 'kc fn wide'); e.dataset.code = 'Enter'; e.innerHTML = '<span class="k">Enter</span><span class="n">전체 재생 · 정지</span>'; r.appendChild(e); }
+    if (ri === 0) { const e = el('div', 'kc fn wide'); e.dataset.code = 'Backspace'; e.innerHTML = '<span class="k">Back</span><span class="n">지우기</span>'; r.appendChild(e); }
+    kb.appendChild(r);
+  });
+  const sp = el('div', 'kr'); sp.style.paddingLeft = '150px';
+  const s = el('div', 'kc fn wide'); s.dataset.code = 'Space'; s.style.maxWidth = '260px'; s.innerHTML = '<span class="k">Space</span><span class="n">보드에 넣기 · Shift+Space 쉼표</span>'; sp.appendChild(s);
+  kb.appendChild(sp);
+  const lg = el('div', 'legend');
+  lg.innerHTML = '<span><i style="background:#e9e7e1"></i>흰건반</span><span><i style="background:#24262c;border:1px solid #3a3d45"></i>검은건반</span><span><i style="background:#1b1d22;border:1px solid var(--accentLine)"></i>기능 키</span><span><i style="background:var(--accent)"></i>누르는 중</span>';
+  kb.appendChild(lg);
+}
+function siLights() {   // 누르고 있는 키 · 건반 표시
+  const heldCodes = new Set(SI.held.keys()), heldP = new Set(SI.held.values()), base = siBase();
+  $('siKb').querySelectorAll('.kc').forEach(c => c.classList.toggle('on', heldCodes.has(c.dataset.code)));
+  $('siPiano').querySelectorAll('.pk').forEach(k => {
+    const p = base + +k.dataset.off;
+    k.classList.toggle('on', heldP.has(p));
+    k.classList.toggle('pend', SI.pending.includes(p) && !heldP.has(p));
+    k.classList.toggle('wait', !!(SI.wait && SI.wait.type === 'note' && SI.wait.off === +k.dataset.off));
+  });
+}
+function siFlash(code) { const c = $('siKb').querySelector(`.kc[data-code="${code}"]`); if (!c) return; c.classList.add('on'); setTimeout(() => { if (!SI.held.has(code)) c.classList.remove('on'); }, 140); }
+function siShowNow() {
+  const nm = $('siNowNm'), sub = $('siNowSub');
+  if (SI.pending.length) {
+    const ps = [...SI.pending].sort((a, b) => a - b);
+    nm.classList.remove('idle'); nm.textContent = ps.map(siPName).join(' · ');
+    const codes = ps.map(p => SI.map[p - siBase()]).filter(Boolean).map(siCodeLbl);
+    sub.textContent = (ps.length > 1 ? `화음 ${ps.length}음` : S.labelMode === 'sol' ? ABC[ps[0] % 12] + (Math.floor(ps[0] / 12) - 1) : SOL[ps[0] % 12]) + (codes.length ? ` · 키 ${codes.join(' + ')}` : '');
+  } else { nm.classList.add('idle'); nm.textContent = '건반을 눌러 보세요'; sub.textContent = '여러 키를 함께 누르면 화음으로 들어가요'; }
+}
+const siBeat = s => `${Math.floor(s / 16) + 1}마디 ${Math.floor(s % 16 / 4) + 1}박${s % 4 ? ' +' + (s % 4) + '/16' : ''}`;
+function siInfo() {
+  $('siPos').textContent = `다음 입력 위치: ${siBeat(SI.cursor)}`;
+  let end = 0; SI.notes.forEach(n => end = Math.max(end, n.s + n.l));
+  $('siSum').textContent = SI.notes.length ? `보드: 노트 ${SI.notes.length}개 · ${Math.ceil(end / 16) || 1}마디 분량` : '보드가 비어 있어요';
+  $('siExport').disabled = !SI.notes.length;
+  $('siUndo').disabled = !SI.undo.length;
+  $('siPlay').innerHTML = svg(SI.playing ? 'stop' : 'play') + (SI.playing ? '정지' : '전체 재생');
+}
+function siRefresh() { siShowNow(); siLights(); siInfo(); siDraw(); }
+
+// ── 소리 · 입력 ──
+function siPlayP(p) { AC(); const t = siTrack(); tone(p, ac.currentTime + 0.005, clamp(SI.len * stepSec(), 0.3, 1.6), t); }
+function siNoteOn(code, p) {
+  if (p < LOW || p > HIGH) { toast('이 옥타브에서는 낼 수 없는 음이에요'); return; }
+  if (!SI.held.size) SI.pending = [];   // 손을 다 뗐다가 다시 누르면 새 음 · 누른 채로 더 누르면 화음
+  SI.held.set(code, p);
+  if (!SI.pending.includes(p)) SI.pending.push(p);
+  siPlayP(p); siShowNow(); siLights();
+}
+function siNoteOff(code) {
+  if (!SI.held.has(code)) return;
+  SI.held.delete(code); siLights();
+  if (SI.auto && !SI.held.size && SI.pending.length) siCommit();
+}
+function siPush() { SI.undo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); if (SI.undo.length > 200) SI.undo.shift(); SI.redo = []; }
+function siRestore(j) { const d = JSON.parse(j); SI.notes = d.n; SI.cursor = d.c; SI.sel = new Set(); siRefresh(); }
+function siUndo() { if (!SI.undo.length) return; SI.redo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); siRestore(SI.undo.pop()); }
+function siRedo() { if (!SI.redo.length) return; SI.undo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); siRestore(SI.redo.pop()); }
+function siCommit() {
+  if (!SI.pending.length) { toast('먼저 건반(키)을 눌러 음을 골라 주세요 (Shift+Space = 쉼표)'); return; }
+  siPush();
+  const nn = SI.pending.map(p => ({ p, s: SI.cursor, l: SI.len }));
+  SI.notes.push(...nn); SI.sel = new Set(nn);
+  SI.cursor += SI.len; SI.pending = [];
+  siRefresh(); siScrollTo(SI.cursor);
+}
+function siRest() { siPush(); SI.cursor += SI.len; SI.sel = new Set(); siRefresh(); siScrollTo(SI.cursor); }
+function siBackspace() {
+  if (SI.sel.size) return siDelSel();
+  if (!SI.notes.length) { if (SI.cursor) { siPush(); SI.cursor = Math.max(0, SI.cursor - SI.len); siRefresh(); } return; }
+  siPush();
+  const last = Math.max(...SI.notes.map(n => n.s));
+  if (SI.cursor > last + Math.max(...SI.notes.filter(n => n.s === last).map(n => n.l))) { SI.cursor = Math.max(last, SI.cursor - SI.len); }   // 맨 뒤 쉼표부터 지움
+  else { SI.notes = SI.notes.filter(n => n.s !== last); SI.cursor = last; }
+  siRefresh(); siScrollTo(SI.cursor);
+}
+function siDelSel() { if (!SI.sel.size) return; siPush(); SI.notes = SI.notes.filter(n => !SI.sel.has(n)); SI.sel = new Set(); siRefresh(); }
+function siOct(d) {
+  const o = clamp(SI.oct + d, 0, 6); if (o === SI.oct) { toast(d < 0 ? '가장 낮은 옥타브예요' : '가장 높은 옥타브예요'); return; }
+  SI.oct = o; SI.held.clear(); siSaveCfg(); siBuildPiano(); siShowNow();
+  toast(`옥타브 ${d > 0 ? '올림' : '내림'} · 아랫줄 Z = ${name(siBase())}`);
+}
+function siMoveSel(ds, dp, dl) {
+  const arr = [...SI.sel]; if (!arr.length) return;
+  if (arr.some(n => n.s + ds < 0 || n.p + dp < LOW || n.p + dp > HIGH || n.l + dl < 1)) return;
+  siPush(); arr.forEach(n => { n.s += ds; n.p += dp; n.l += dl; });
+  if (dp) siPlayP(arr[0].p);
+  siRefresh();
+}
+
+// ── 임시 보드 (미니 피아노 롤) ──
+const SI_SW = 14;
+function siDraw() {
+  const cv = $('siBoard'), wrap = $('siBoardWrap'); if (!cv || !stepM.classList.contains('show')) return;
+  let end = SI.cursor; SI.notes.forEach(n => end = Math.max(end, n.s + n.l));
+  const steps = Math.max(64, Math.ceil((end + 24) / 16) * 16), base = siBase();
+  const ps = SI.notes.map(n => n.p).concat(SI.pending, [base + 3, base + 14]);
+  const lo = Math.max(LOW, Math.min(...ps) - 2), hi = Math.min(HIGH, Math.max(...ps) + 2), rows = hi - lo + 1;
+  const H = wrap.clientHeight, W = steps * SI_SW, rowH = H / rows, dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  SI.geo = { lo, hi, rowH, W, H };
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.fillStyle = '#101114'; c.fillRect(0, 0, W, H);
+  for (let p = lo; p <= hi; p++) {
+    const y = (hi - p) * rowH;
+    if (siIsBlack(p)) { c.fillStyle = '#0b0c0e'; c.fillRect(0, y, W, rowH); }
+    if (p % 12 === 0) { c.fillStyle = 'rgba(255,255,255,.07)'; c.fillRect(0, y + rowH - 1, W, 1); }
+  }
+  for (let s = 0; s <= steps; s += S.grid) {
+    c.fillStyle = s % 16 === 0 ? 'rgba(255,255,255,.2)' : s % 4 === 0 ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.03)';
+    c.fillRect(s * SI_SW, 0, 1, H);
+    if (s % 16 === 0) { c.fillStyle = '#6b707a'; c.font = '10px system-ui'; c.fillText(String(s / 16 + 1), s * SI_SW + 3, 11); }
+  }
+  // 옥타브 표시 (도 줄)
+  c.font = '9px system-ui'; c.fillStyle = '#4d525b';
+  for (let p = lo; p <= hi; p++) if (p % 12 === 0) c.fillText(name(p), (wrap.scrollLeft || 0) + 3, (hi - p + 1) * rowH - 2);
+  const col = (siTrack() || {}).color || '#f2c230';
+  for (const n of SI.notes) {
+    const x = n.s * SI_SW + 1, y = (hi - n.p) * rowH + 1, w = n.l * SI_SW - 2, h = Math.max(3, rowH - 2), on = SI.sel.has(n);
+    c.fillStyle = col; c.globalAlpha = on ? 1 : 0.78; rr(c, x, y, w, h, 3); c.fill(); c.globalAlpha = 1;
+    if (on) { c.strokeStyle = '#fff'; c.lineWidth = 1.5; rr(c, x, y, w, h, 3); c.stroke(); }
+    if (h >= 9 && w >= 22) { c.fillStyle = 'rgba(0,0,0,.75)'; c.font = `bold ${Math.min(10, h - 2)}px system-ui`; c.fillText(siPName(n.p), x + 3, y + h / 2 + 3.5); }
+  }
+  // 다음 입력 위치 + 대기 중인 음
+  const cx = SI.cursor * SI_SW;
+  c.fillStyle = 'rgba(242,194,48,.10)'; c.fillRect(cx, 0, SI.len * SI_SW, H);
+  for (const p of SI.pending) { if (p < lo || p > hi) continue; c.strokeStyle = '#f2c230'; c.setLineDash([3, 3]); c.lineWidth = 1; c.strokeRect(cx + 1.5, (hi - p) * rowH + 1.5, SI.len * SI_SW - 3, Math.max(3, rowH - 3)); c.setLineDash([]); }
+  c.fillStyle = '#f2c230'; c.fillRect(cx - 1, 0, 2, H);
+  if (SI.playing && SI.playHead != null) { c.fillStyle = '#fff'; c.fillRect(SI.playHead * SI_SW, 0, 1.5, H); }
+}
+function siScrollTo(s) {
+  const w = $('siBoardWrap'), x = s * SI_SW;
+  if (x < w.scrollLeft + 30 || x > w.scrollLeft + w.clientWidth - 80) w.scrollLeft = Math.max(0, x - w.clientWidth * 0.6);
+}
+function siHit(x, y) {
+  const g = SI.geo; if (!g) return null;
+  const p = g.hi - Math.floor(y / g.rowH), s = x / SI_SW;
+  for (let i = SI.notes.length - 1; i >= 0; i--) { const n = SI.notes[i]; if (n.p === p && s >= n.s && s < n.s + n.l) return n; }
+  return null;
+}
+function siBoardXY(e) { const r = $('siBoard').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+$('siBoard').addEventListener('pointerdown', e => {
+  if (e.button === 2) return;
+  const [x, y] = siBoardXY(e), n = siHit(x, y);
+  if (!n) { SI.sel = new Set(); SI.cursor = Math.max(0, Math.floor(x / SI_SW / S.grid) * S.grid); siRefresh(); return; }
+  if (e.shiftKey) { SI.sel.has(n) ? SI.sel.delete(n) : SI.sel.add(n); siRefresh(); return; }
+  if (!SI.sel.has(n)) SI.sel = new Set([n]);
+  siPlayP(n.p);
+  SI.drag = { x0: x, y0: y, orig: new Map([...SI.sel].map(m => [m, { s: m.s, p: m.p }])), pushed: false, dp: 0 };
+  $('siBoard').setPointerCapture(e.pointerId); siRefresh();
+});
+$('siBoard').addEventListener('pointermove', e => {
+  const [x, y] = siBoardXY(e);
+  if (!SI.drag) { $('siBoard').style.cursor = siHit(x, y) ? 'grab' : 'crosshair'; return; }
+  const d = SI.drag, g = SI.geo, sn = e.altKey ? 1 : S.grid;
+  let ds = Math.round((x - d.x0) / SI_SW / sn) * sn, dp = Math.round(-(y - d.y0) / g.rowH);
+  const o = [...d.orig.values()];
+  ds = Math.max(ds, -Math.min(...o.map(v => v.s)));
+  dp = clamp(dp, LOW - Math.min(...o.map(v => v.p)), HIGH - Math.max(...o.map(v => v.p)));
+  if (!d.pushed && (ds || dp)) { siPush(); d.pushed = true; }
+  d.orig.forEach((v, m) => { m.s = v.s + ds; m.p = v.p + dp; });
+  if (dp !== d.dp) { d.dp = dp; siPlayP([...d.orig.keys()][0].p); }
+  $('siBoard').style.cursor = 'grabbing'; siDraw();
+});
+const siDragEnd = () => { if (SI.drag) { SI.drag = null; siRefresh(); } };
+$('siBoard').addEventListener('pointerup', siDragEnd);
+$('siBoard').addEventListener('pointercancel', siDragEnd);
+$('siBoard').addEventListener('contextmenu', e => {
+  e.preventDefault(); const [x, y] = siBoardXY(e), n = siHit(x, y); if (!n) return;
+  siPush(); SI.notes = SI.notes.filter(m => m !== n); SI.sel.delete(n); siRefresh();
+});
+$('siBoardWrap').addEventListener('scroll', () => siDraw());
+
+// ── 건반 클릭 (마우스로도 연주 · 연주 키 설정) ──
+$('siPiano').addEventListener('pointerdown', e => {
+  const k = e.target.closest('.pk'); if (!k) return;
+  const off = +k.dataset.off;
+  if (SI.remap) { SI.wait = { type: 'note', off }; siRemapMsg(); siLights(); return; }
+  const code = 'mouse'; siNoteOn(code, siBase() + off);
+  const up = () => { siNoteOff(code); window.removeEventListener('pointerup', up); };
+  window.addEventListener('pointerup', up);
+});
+function siRemapMsg() {
+  const w = SI.wait, m = $('siRemapMsg');
+  if (!w) m.innerHTML = '바꿀 <b>건반</b>이나 <b>옥타브 −/+ 버튼</b>을 누른 뒤, 연결할 키보드 키를 누르세요.';
+  else if (w.type === 'note') m.innerHTML = `<b>${name(siBase() + w.off)}</b>에 연결할 키를 누르세요 · <kbd>Backspace</kbd> = 연결 해제 · <kbd>Esc</kbd> = 취소`;
+  else m.innerHTML = `<b>옥타브 ${w.type === 'octUp' ? '+' : '−'}</b>에 연결할 키를 누르세요 · <kbd>Esc</kbd> = 취소`;
+}
+function siSetRemap(on) {
+  SI.remap = on; SI.wait = null;
+  $('siRemapBtn').classList.toggle('on', on); $('siRemapBar').classList.toggle('show', on);
+  siRemapMsg(); siBuildPiano();
+}
+function siAssign(code) {
+  const w = SI.wait; if (!w) return;
+  for (const k in SI.map) if (SI.map[k] === code) delete SI.map[k];   // 같은 키가 다른 곳에 있으면 빼기
+  if (SI.octDn === code && w.type !== 'octDn') SI.octDn = '';
+  if (SI.octUp === code && w.type !== 'octUp') SI.octUp = '';
+  if (w.type === 'note') SI.map[w.off] = code; else SI[w.type] = code;
+  toast(`${siCodeLbl(code)} 키 → ${w.type === 'note' ? name(siBase() + w.off) : w.type === 'octUp' ? '옥타브 +' : '옥타브 −'}`);
+  SI.wait = null; siSaveCfg(); siRemapMsg(); siBuildPiano();
+}
+
+// ── 미리 듣기 ──
+function siStopPlay() { if (!SI.playing) return; SI.playing = false; cancelAnimationFrame(SI.playT); SI.playHead = null; killVoices(); siInfo(); siDraw(); }
+function siPlayBoard() {
+  if (SI.playing) return siStopPlay();
+  if (!SI.notes.length) { toast('보드가 비어 있어요'); return; }
+  AC(); if (mode !== 'idle') stop();
+  const t = siTrack(), ss = stepSec(), t0 = ac.currentTime + 0.06;
+  let end = 0; for (const n of SI.notes) { tone(n.p, t0 + n.s * ss, n.l * ss, t); end = Math.max(end, n.s + n.l); }
+  SI.playing = true; siInfo();
+  const tick = () => {
+    if (!SI.playing) return;
+    SI.playHead = (ac.currentTime - t0) / ss;
+    if (SI.playHead > end + 2) { SI.playing = false; SI.playHead = null; siInfo(); siDraw(); return; }
+    siDraw(); SI.playT = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+// ── 열기 · 닫기 · 내보내기 ──
+function openStepInput() {
+  if (mode !== 'idle') stop();
+  closeCtx(); endPaste();
+  if (pendingRec) closePreview(false);
+  const s = $('siTrack'), keep = +s.value; s.innerHTML = '';
+  S.tracks.forEach(t => s.add(new Option(t.name + (isDrumTrack(t) ? ' (드럼)' : ''), t.id)));
+  s.value = String(S.tracks.some(t => t.id === keep) && SI.notes.length ? keep : S.active);
+  $('siAuto').checked = SI.auto;
+  SI.held.clear(); SI.pending = [];
+  stepM.classList.add('show');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  siBuildLens(); siBuildPiano(); siRefresh();
+}
+function closeStepInput() { siStopPlay(); if (SI.remap) siSetRemap(false); SI.held.clear(); stepM.classList.remove('show'); }
+function siExport() {
+  if (!SI.notes.length) { toast('보드가 비어 있어요'); return; }
+  const t = siTrack(); if (!t) return;
+  const where = $('siWhere').value;
+  let at = 0;
+  if (where === 'head') at = Math.max(0, Math.round(playhead / S.grid) * S.grid);
+  else if (where === 'end') { S.notes.forEach(n => { if (n.t === t.id) at = Math.max(at, n.s + n.l); }); at = Math.ceil(at / S.grid) * S.grid; }
+  pushUndo();
+  const nn = SI.notes.map(n => ({ p: n.p, s: at + n.s, l: n.l, t: t.id }));
+  S.notes.push(...nn);
+  ensureLength(Math.max(...nn.map(n => n.s + n.l)));
+  if (S.active !== t.id) setActive(t.id);
+  sel = new Set(nn); save();
+  closeStepInput(); drawAll();
+  const x = at * STEP_W; if (x < scroller.scrollLeft || x > scroller.scrollLeft + scroller.clientWidth - 60) scroller.scrollLeft = Math.max(0, x - 80);
+  toast(`'${t.name}' 트랙 ${siBeat(at)}부터 노트 ${nn.length}개를 넣었어요 (되돌리기 Ctrl+Z · 보드 내용은 그대로 남아 있어요)`);
+}
+$('siOctDn').onclick = () => { if (SI.remap) { SI.wait = { type: 'octDn' }; siRemapMsg(); } else siOct(-1); };
+$('siOctUp').onclick = () => { if (SI.remap) { SI.wait = { type: 'octUp' }; siRemapMsg(); } else siOct(1); };
+$('siAuto').onchange = e => { SI.auto = e.target.checked; siSaveCfg(); e.target.blur(); };
+$('siRemapBtn').onclick = () => siSetRemap(!SI.remap);
+$('siRemapDone').onclick = () => siSetRemap(false);
+$('siRemapReset').onclick = () => { SI.map = Object.assign({}, SI_DEF_MAP); SI.octDn = 'Minus'; SI.octUp = 'Equal'; SI.wait = null; siSaveCfg(); siRemapMsg(); siBuildPiano(); toast('기본 키 배치로 돌렸어요'); };
+$('siCommit').onclick = siCommit;
+$('siRest').onclick = siRest;
+$('siBack').onclick = siBackspace;
+$('siPlay').onclick = siPlayBoard;
+$('siUndo').onclick = siUndo;
+$('siClear').onclick = () => { if (!SI.notes.length && !SI.cursor) return; siPush(); SI.notes = []; SI.cursor = 0; SI.sel = new Set(); siRefresh(); toast('보드를 비웠어요 (Ctrl+Z로 되돌리기)'); };
+$('siClose').onclick = closeStepInput;
+$('siCancel').onclick = closeStepInput;
+$('siExport').onclick = siExport;
+$('siTrack').onchange = e => { e.target.blur(); siDraw(); };
+$('siWhere').onchange = e => e.target.blur();
+stepM.querySelectorAll('button').forEach(b => b.addEventListener('mouseup', () => b.blur()));   // 버튼에 포커스가 남아 Enter/Space가 눌리지 않게
+$('stepBtn').onclick = openStepInput;
+
+// 창이 열린 동안 키보드를 독점 (캡처 단계에서 먼저 받아서 다른 단축키로 안 넘어가게)
+window.addEventListener('keydown', e => {
+  if (!stepM.classList.contains('show')) return;
+  if (/^F\d+$/.test(e.code) && e.code !== 'F1') return;   // F5·F11·F12 같은 브라우저 키는 그대로
+  e.stopImmediatePropagation();
+  const tg = (e.target.tagName || '').toLowerCase();
+  if (tg === 'select' && /^(Arrow|Enter|Space|Home|End|Page)/.test(e.code)) return;   // 목록 고르는 중
+  e.preventDefault();
+  const code = e.code, mod = e.ctrlKey || e.metaKey;
+  // 연주 키 설정: 다음 키를 연결
+  if (SI.remap && SI.wait) {
+    if (code === 'Escape') { SI.wait = null; siRemapMsg(); siLights(); return; }
+    if ((code === 'Backspace' || code === 'Delete') && SI.wait.type === 'note') { delete SI.map[SI.wait.off]; SI.wait = null; siSaveCfg(); siRemapMsg(); siBuildPiano(); return; }
+    if (SI_RESERVED.test(code) || mod) { toast('그 키는 기능 키라서 연결할 수 없어요'); return; }
+    siAssign(code); return;
+  }
+  if (mod) {
+    const k = code;
+    if (k === 'Enter' || k === 'NumpadEnter') siExport();
+    else if (k === 'KeyZ') e.shiftKey ? siRedo() : siUndo();
+    else if (k === 'KeyY') siRedo();
+    else if (k === 'KeyA') { SI.sel = new Set(SI.notes); siRefresh(); }
+    return;
+  }
+  // 연주 키
+  const off = siCodeToOff(code);
+  if (off != null) { if (!e.repeat && !e.altKey) { siNoteOn(code, siBase() + off); } return; }
+  if (code === SI.octDn || code === 'NumpadSubtract') { if (!e.repeat) { siOct(-1); siFlash(code); } return; }
+  if (code === SI.octUp || code === 'NumpadAdd') { if (!e.repeat) { siOct(1); siFlash(code); } return; }
+  if (e.repeat && !/^(Arrow|Backspace|KeyA)/.test(code)) return;
+  siFlash(code);
+  switch (code) {
+    case 'Space': e.shiftKey ? siRest() : siCommit(); break;
+    case 'Enter': case 'NumpadEnter': siPlayBoard(); break;
+    case 'Backspace': siBackspace(); break;
+    case 'Delete': siDelSel(); break;
+    case 'Semicolon': { const i = SI_LENS.findIndex(l => l[0] === SI.len); siSetLen(SI_LENS[Math.max(0, i - 1)][0]); break; }
+    case 'Quote': { const i = SI_LENS.findIndex(l => l[0] === SI.len); siSetLen(SI_LENS[Math.min(SI_LENS.length - 1, i + 1)][0]); break; }
+    case 'Escape':
+      if (SI.playing) siStopPlay();
+      else if (SI.remap) siSetRemap(false);
+      else if (SI.sel.size) { SI.sel = new Set(); siRefresh(); }
+      else closeStepInput();
+      break;
+    case 'KeyA': case 'ArrowLeft': case 'ArrowRight': {   // A · ←→ = 입력 위치를 지금 음 길이만큼 이동 · Shift = 선택 노트 이동 · Alt = 선택 노트 길이
+      const dir = code === 'ArrowLeft' ? -1 : 1;
+      if (SI.sel.size && e.altKey) siMoveSel(0, 0, dir * S.grid);
+      else if (SI.sel.size && e.shiftKey) siMoveSel(dir * S.grid, 0, 0);
+      else { SI.cursor = Math.max(0, SI.cursor + dir * SI.len); siRefresh(); siScrollTo(SI.cursor); }
+      break;
+    }
+    case 'ArrowUp': case 'ArrowDown': {
+      const d = (code === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 12 : 1);
+      if (SI.sel.size) siMoveSel(0, d, 0); else siOct(d > 0 ? 1 : -1);
+      break;
+    }
+  }
+}, true);
+window.addEventListener('keyup', e => {
+  if (!stepM.classList.contains('show')) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  siNoteOff(e.code);
+}, true);
+window.addEventListener('blur', () => { if (stepM.classList.contains('show')) { SI.held.clear(); siLights(); } });
+window.addEventListener('resize', () => { if (stepM.classList.contains('show')) siDraw(); });
+
 // ───────── 사운드 편집기 (인스펙터 · 트랙 창 공용) ─────────
 const F = {
   pct: v => Math.round(v * 100) + '%', sec: v => v < 1 ? Math.round(v * 1000) + 'ms' : v.toFixed(2) + 's',
@@ -4117,8 +4700,6 @@ $('rpRedo').onclick = () => { const st = pendingRec.startStep; closePreview(fals
 $('metroBtn').onclick = () => { S.metro = !S.metro; setButtons(); save(); };
 $('countBtn').onclick = () => { S.countin = !S.countin; setButtons(); save(); };
 $('undoBtn').onclick = undo; $('redoBtn').onclick = redo;
-$('copyBtn').onclick = () => copySel(); $('pasteBtn').onclick = () => startPaste();
-$('dupBtn').onclick = duplicate; $('delBtn').onclick = deleteSel;
 $('midiBtn').onclick = () => exportMidi();
 $('zoomIn').onclick = () => setZoom(STEP_W * 1.25, ROW_H);
 $('zoomOut').onclick = () => setZoom(STEP_W / 1.25, ROW_H);
@@ -4141,6 +4722,7 @@ const gateMark = () => $('gateMark').style.left = meterPct(+$('gate').value) + '
 $('gate').oninput = gateMark;
 
 document.addEventListener('keydown', e => {
+  if (stepM.classList.contains('show')) return;   // 스텝 입력 창이 키보드를 독점
   if (mp.classList.contains('show') && !$('confirm').classList.contains('show')) {
     const tg = (e.target.tagName || '').toLowerCase();
     if (e.key === 'Escape' && tg !== 'input') { if (ctx.classList.contains('show')) closeCtx(); else openProject(LIB.cur); }
@@ -4198,11 +4780,12 @@ document.addEventListener('keydown', e => {
   }
   if (k === 'r' && e.shiftKey) { record(); return; }
   if (k === 'j') { openAccomp(); return; }
+  if (k === 'k' || e.code === 'KeyK') { openStepInput(); return; }
   if (k === 'p' && !e.repeat) { inspPreview(); return; }
   const toolKeys = { q: 'hand', w: 'select', e: 'pen', r: 'eraser', t: 'range', y: 'picker' };
   if (toolKeys[k] && !e.altKey) { setTool(toolKeys[k]); return; }
 });
-document.addEventListener('keyup', e => { if (e.code === 'Space') { e.preventDefault(); spaceUp(false); } });
+document.addEventListener('keyup', e => { if (stepM.classList.contains('show')) return; if (e.code === 'Space') { e.preventDefault(); spaceUp(false); } });
 window.addEventListener('resize', () => { layout(); placePal(); });
 
 // ───────── Thaniya Engine 연동 (엔진 「음악 만들기」 창 안에서 ?engine=1 로 열렸을 때) ─────────
@@ -4343,7 +4926,10 @@ if (ENG.on) {
   // 마이페이지의 '홈' 링크는 엔진 창 안에서 SoundLab 홈으로 넘어가지 않게
   document.querySelectorAll('.mpBrand').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openProject(LIB.cur); }));
   window.addEventListener('message', e => {
-    if (e.source !== window.parent) return;
+    // 엔진 안 창 · 또는 엔진 밖으로 꺼낸 창(부모를 연 엔진)에서 온 것만
+    let fromEng = e.source === window.parent;
+    if (!fromEng) try { fromEng = !!window.parent.opener && e.source === window.parent.opener; } catch (er) {}
+    if (!fromEng) return;
     if (!(e.origin === location.origin || ENG_ORIGINS.some(r => r.test(e.origin)))) {   // 허용하지 않은 주소: 이유를 알려 줌 (데이터 없음)
       if (e.data && e.data.type === 'thaniya-engine:hello') try { window.parent.postMessage({ type: 'soundlab:reject', origin: e.origin }, '*'); } catch (er) {}
       return;
@@ -4368,6 +4954,14 @@ if (ENG.on) {
   engPost({ type: 'soundlab:hi', version: 1 }, false);   // 데이터 없는 신호 · 엔진이 hello로 답하면 주소를 확인하고 ready
 }
 
+// ───────── 입력창: 누르면 내용 전체 선택 (BPM 등 바로 새로 입력) ─────────
+{
+  const selectable = t => t && t.tagName === 'INPUT' && /^(number|text)$/.test(t.type) && !t.readOnly && !t.disabled;
+  let justFocused = null;
+  document.addEventListener('focusin', e => { const t = e.target; if (!selectable(t)) return; justFocused = t; try { t.select(); } catch (er) {} setTimeout(() => { if (justFocused === t) justFocused = null; }, 400); });
+  // 클릭으로 들어왔을 때 마우스를 떼는 순간 선택이 풀리지 않게
+  document.addEventListener('mouseup', e => { if (e.target === justFocused) { e.preventDefault(); justFocused = null; } }, true);
+}
 // ───────── 시작 ─────────
 renderList(); renderInspector(); setButtons(); gateMark(); updateSongTitle();
 applyPanels();
