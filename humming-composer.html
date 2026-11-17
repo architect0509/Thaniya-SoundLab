@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <link rel="icon" href="./Asset/icon.png" type="image/png">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Thaniya-SoundLab</title>
 <style>
 :root{
@@ -728,6 +728,17 @@ html,body{height:100dvh}
 }
 @keyframes fanPop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
 #fanBack{position:fixed;inset:0;z-index:61;background:rgba(0,0,0,.35)}
+/* ───────── 모바일 화면 고정 (전체화면·키보드·주소창 변화에도 오른쪽/아래 빈 여백이 생기지 않게) ───────── */
+html{position:fixed;inset:0;width:100%;overflow:hidden;overscroll-behavior:none;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{position:fixed;left:var(--vv-l,0px);top:var(--vv-t,0px);width:var(--vv-w,100%);height:var(--vv-h,100dvh);
+  grid-template-columns:minmax(0,1fr);overflow:hidden;overscroll-behavior:none}
+@media (pointer:coarse){
+  #topbar .songName,.songName{font-size:16px!important}   /* 16px 미만이면 iOS가 입력 때 화면을 확대해 버려요 */
+}
+@media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #stepModal .scard{width:100%;height:100%;max-height:100%}
+}
+#stepModal .btn.tap{filter:brightness(1.35)}
 </style>
 </head>
 <body>
@@ -2651,6 +2662,57 @@ function hoverCursor(x, y, e) {
 }
 const isMac = /Mac/.test(navigator.platform);
 scroller.addEventListener('contextmenu', e => e.preventDefault());
+// ── 두 손가락 확대/축소 (가로로 벌리면 가로만, 세로로 벌리면 세로만, 대각선이면 전체) + 두 손가락 이동
+const tPtr = new Map();
+let pinch = null;
+function cancelDragForPinch() {   // 첫 손가락이 이미 하던 편집은 취소
+  if (autoS) { cancelAnimationFrame(autoS.raf); autoS = null; }
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (d.type === 'band') { requestDraw(); return; }
+  if (d.type === 'pan' || d.type === 'zoom') return;
+  if (d.changed) undo(); else undoStack.pop();
+  if (pendingRestore) { setTool(pendingRestore, true); pendingRestore = null; }
+  drawAll();
+}
+function pinchGeo() {
+  const [a, b] = [...tPtr.values()], r = scroller.getBoundingClientRect();
+  return { dx: Math.abs(a.x - b.x), dy: Math.abs(a.y - b.y), d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2 - r.left, my: (a.y + b.y) / 2 - r.top };
+}
+function startPinch() {
+  const g = pinchGeo(); if (g.d < 8) { pinch = null; return; }
+  const mode = g.dx > g.dy * 2 ? 'x' : g.dy > g.dx * 2 ? 'y' : 'xy';
+  pinch = { g0: g, mode, w0: STEP_W, h0: ROW_H, sAt: (scroller.scrollLeft + g.mx) / STEP_W, rAt: (scroller.scrollTop + g.my) / ROW_H };
+}
+scroller.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'touch') return;
+  tPtr.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (tPtr.size === 2) { cancelDragForPinch(); startPinch(); e.stopImmediatePropagation(); e.preventDefault(); try { scroller.setPointerCapture(e.pointerId); } catch (_) {} }
+  else if (tPtr.size > 2) e.stopImmediatePropagation();
+});
+scroller.addEventListener('pointermove', e => {
+  if (!tPtr.has(e.pointerId)) return;
+  tPtr.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (tPtr.size < 2) return;
+  e.stopImmediatePropagation();
+  if (!pinch) { startPinch(); if (!pinch) return; }
+  const g = pinchGeo(), p = pinch;
+  const fx = p.mode === 'y' ? 1 : (p.mode === 'x' ? Math.max(g.dx, 12) / Math.max(p.g0.dx, 12) : g.d / p.g0.d);
+  const fy = p.mode === 'x' ? 1 : (p.mode === 'y' ? Math.max(g.dy, 12) / Math.max(p.g0.dy, 12) : g.d / p.g0.d);
+  setZoom(p.w0 * fx, p.h0 * fy, g.mx, g.my);
+  scroller.scrollLeft = p.sAt * STEP_W - g.mx;   // 두 손가락 가운데 점이 따라오도록 같이 이동
+  scroller.scrollTop = p.rAt * ROW_H - g.my;
+  requestDraw();
+});
+const pinchUp = e => {
+  if (!tPtr.has(e.pointerId)) return;
+  const was = tPtr.size >= 2; tPtr.delete(e.pointerId);
+  if (was) { e.stopImmediatePropagation(); pinch = null; if (tPtr.size === 1) { const [id] = tPtr.keys(); tPtr.delete(id); } }   // 남은 손가락은 편집으로 이어지지 않게
+};
+scroller.addEventListener('pointerup', pinchUp);
+scroller.addEventListener('pointercancel', pinchUp);
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));   // iOS 사파리 자체 확대 막기
+
 scroller.addEventListener('pointerdown', e => {
   if (mode === 'rec' || mode === 'countin') return;
   const { lx, ly, x, y } = evPos(e);
@@ -4055,6 +4117,18 @@ $('siRest').onclick = siRest;
 const siCur = d => { SI.cursor = Math.max(0, SI.cursor + d * SI.len); siRefresh(); siScrollTo(SI.cursor); };
 $('siCurL').onclick = () => siCur(-1);
 $('siCurR').onclick = () => siCur(1);
+// 건반을 누른 채(다른 손가락) 버튼을 누르면 브라우저가 click을 안 만들어 줄 때가 있어서, 터치는 닿는 순간 바로 실행
+function siTouchBtn(id, fn) {
+  const b = $(id); let last = 0;
+  b.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch') return;
+    e.preventDefault(); last = Date.now(); b.classList.add('tap'); setTimeout(() => b.classList.remove('tap'), 120);
+    fn();
+  });
+  b.addEventListener('click', e => { if (Date.now() - last < 700) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+}
+siTouchBtn('siCommit', siCommit); siTouchBtn('siRest', siRest); siTouchBtn('siBack', siBackspace);
+siTouchBtn('siCurL', () => siCur(-1)); siTouchBtn('siCurR', () => siCur(1));
 $('siDelBtn').onclick = () => { if (!SI.sel.size) { toast('지울 노트를 먼저 눌러 선택하세요'); return; } siDelSel(); };
 $('siBack').onclick = siBackspace;
 $('siPlay').onclick = siPlayBoard;
@@ -5368,6 +5442,33 @@ drawAll();
   window.addEventListener('resize', () => { if (innerWidth > 760) closeMore(); });
 }
 })();
+{ // 화면 크기 고정: 전체화면 전환·키보드 열림/닫힘·주소창 변화 뒤에도 가장자리 빈 여백이 남지 않게
+  const vv = window.visualViewport, root = document.documentElement;
+  let lastH = 0;
+  const typing = () => { const a = document.activeElement; return !!a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(range|checkbox|radio|color|button|file|submit)$/.test(a.type))); };
+  const sync = () => {
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+    if (document.scrollingElement) { document.scrollingElement.scrollTop = 0; document.scrollingElement.scrollLeft = 0; }
+    const w = vv ? vv.width : window.innerWidth, h = vv ? vv.height : window.innerHeight;
+    let useH = h;
+    if (typing() && lastH && h < lastH - 80) useH = lastH;   // 키보드가 올라온 동안은 화면이 찌그러지지 않게 높이 유지
+    else lastH = h;
+    root.style.setProperty('--vv-w', Math.round(w) + 'px');
+    root.style.setProperty('--vv-h', Math.round(useH) + 'px');
+    root.style.setProperty('--vv-l', Math.round(vv ? vv.offsetLeft : 0) + 'px');
+    root.style.setProperty('--vv-t', Math.round(vv ? vv.offsetTop : 0) + 'px');
+  };
+  let t = 0;
+  const settle = () => { sync(); clearTimeout(t); t = setTimeout(() => { sync(); layout(); placePal && placePal(); }, 180); };
+  if (vv) { vv.addEventListener('resize', settle); vv.addEventListener('scroll', sync); }
+  window.addEventListener('resize', settle);
+  window.addEventListener('orientationchange', () => { lastH = 0; setTimeout(settle, 250); });
+  document.addEventListener('fullscreenchange', () => { lastH = 0; settle(); setTimeout(settle, 400); });
+  document.addEventListener('webkitfullscreenchange', () => { lastH = 0; settle(); setTimeout(settle, 400); });
+  document.addEventListener('focusout', () => setTimeout(() => { if (!typing()) { lastH = 0; settle(); } }, 120));
+  window.addEventListener('scroll', () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }, { passive: true });
+  sync();
+}
 </script>
 </body>
 </html>
