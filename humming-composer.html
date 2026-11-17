@@ -3541,7 +3541,7 @@ function siShowNow() {
     nm.classList.remove('idle'); nm.textContent = ps.map(siPName).join(' · ');
     const codes = ps.map(p => SI.map[p - siBase()]).filter(Boolean).map(siCodeLbl);
     sub.textContent = (ps.length > 1 ? `화음 ${ps.length}음` : S.labelMode === 'sol' ? ABC[ps[0] % 12] + (Math.floor(ps[0] / 12) - 1) : SOL[ps[0] % 12]) + (codes.length ? ` · 키 ${codes.join(' + ')}` : '');
-  } else { nm.classList.add('idle'); nm.textContent = '건반을 눌러 보세요'; sub.textContent = '여러 키를 함께 누르면 화음으로 들어가요'; }
+  } else { nm.classList.add('idle'); nm.textContent = '건반을 눌러 보세요'; sub.textContent = '키를 누른 채 Space · 화음은 여러 키를 동시에 누른 채 Space'; }
 }
 const siBeat = s => `${Math.floor(s / 16) + 1}마디 ${Math.floor(s % 16 / 4) + 1}박${s % 4 ? ' +' + (s % 4) + '/16' : ''}`;
 function siInfo() {
@@ -3558,26 +3558,43 @@ function siRefresh() { siShowNow(); siLights(); siInfo(); siDraw(); }
 function siPlayP(p) { AC(); const t = siTrack(); tone(p, ac.currentTime + 0.005, clamp(SI.len * stepSec(), 0.3, 1.6), t); }
 function siNoteOn(code, p) {
   if (p < LOW || p > HIGH) { toast('이 옥타브에서는 낼 수 없는 음이에요'); return; }
-  if (!SI.held.size) SI.pending = [];   // 손을 다 뗐다가 다시 누르면 새 음 · 누른 채로 더 누르면 화음
-  SI.held.set(code, p);
-  if (!SI.pending.includes(p)) SI.pending.push(p);
+  // 화음 = 지금 '동시에 누르고 있는' 키들. 키를 뗀 뒤 이어서 누른 음은 누적되지 않아요.
+  if (!SI.held.size) SI.consumed = false;
+  SI.relSnap = null;
+  SI.held.set(code, p); SI.last = p;
+  siSyncPending();
   siPlayP(p); siShowNow(); siLights();
 }
+// 누르고 있는 키가 있으면 그 키들, 없으면 마지막으로 누른 음 하나
+function siHeldPitches() { return [...new Set(SI.held.values())]; }
+function siSyncPending() { SI.pending = siHeldPitches(); }
 function siNoteOff(code) {
   if (!SI.held.has(code)) return;
-  SI.held.delete(code); siLights();
-  if (SI.auto && !SI.held.size && SI.pending.length) siCommit();
+  if (!SI.consumed && SI.relSnap == null) SI.relSnap = siHeldPitches();   // 떼기 시작한 순간 눌려 있던 키 = 화음 (바로 입력용)
+  SI.held.delete(code);
+  if (!SI.held.size) {
+    const snap = SI.relSnap, was = SI.consumed;
+    SI.relSnap = null; SI.consumed = false; siSyncPending(); siShowNow(); siLights();
+    if (SI.auto && !was && snap && snap.length) siCommitNotes(snap);
+    return;
+  }
+  siSyncPending(); siShowNow(); siLights();
 }
 function siPush() { SI.undo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); if (SI.undo.length > 200) SI.undo.shift(); SI.redo = []; }
 function siRestore(j) { const d = JSON.parse(j); SI.notes = d.n; SI.cursor = d.c; SI.sel = new Set(); siRefresh(); }
 function siUndo() { if (!SI.undo.length) return; SI.redo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); siRestore(SI.undo.pop()); }
 function siRedo() { if (!SI.redo.length) return; SI.undo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); siRestore(SI.redo.pop()); }
-function siCommit() {
-  if (!SI.pending.length) { toast('먼저 건반(키)을 눌러 음을 골라 주세요 (Shift+Space = 쉼표)'); return; }
+function siCommit() {   // Space: 지금 누르고 있는 키 전체(화음)만 입력 — 키를 뗀 뒤에는 입력되지 않음
+  siCommitNotes(siHeldPitches());
+}
+function siCommitNotes(ps) {
+  if (!ps.length) { toast('건반(키)을 누른 채로 Space를 눌러 주세요 (Shift+Space = 쉼표)'); return; }
   siPush();
-  const nn = SI.pending.map(p => ({ p, s: SI.cursor, l: SI.len }));
+  const nn = ps.map(p => ({ p, s: SI.cursor, l: SI.len }));
   SI.notes.push(...nn); SI.sel = new Set(nn);
-  SI.cursor += SI.len; SI.pending = [];
+  SI.cursor += SI.len; SI.last = null; SI.relSnap = null;
+  SI.consumed = SI.held.size > 0;   // 아직 누르고 있는 키를 뗄 때 '바로 입력'이 또 넣지 않게
+  siSyncPending();
   siRefresh(); siScrollTo(SI.cursor);
 }
 function siRest() { siPush(); SI.cursor += SI.len; SI.sel = new Set(); siRefresh(); siScrollTo(SI.cursor); }
@@ -3593,7 +3610,7 @@ function siBackspace() {
 function siDelSel() { if (!SI.sel.size) return; siPush(); SI.notes = SI.notes.filter(n => !SI.sel.has(n)); SI.sel = new Set(); siRefresh(); }
 function siOct(d) {
   const o = clamp(SI.oct + d, 0, 6); if (o === SI.oct) { toast(d < 0 ? '가장 낮은 옥타브예요' : '가장 높은 옥타브예요'); return; }
-  SI.oct = o; SI.held.clear(); siSaveCfg(); siBuildPiano(); siShowNow();
+  SI.oct = o; SI.held.clear(); SI.relSnap = null; SI.consumed = false; siSyncPending(); siSaveCfg(); siBuildPiano(); siShowNow();
   toast(`옥타브 ${d > 0 ? '올림' : '내림'} · 아랫줄 Z = ${name(siBase())}`);
 }
 function siMoveSel(ds, dp, dl) {
@@ -3744,7 +3761,7 @@ function openStepInput() {
   S.tracks.forEach(t => s.add(new Option(t.name + (isDrumTrack(t) ? ' (드럼)' : ''), t.id)));
   s.value = String(S.tracks.some(t => t.id === keep) && SI.notes.length ? keep : S.active);
   $('siAuto').checked = SI.auto;
-  SI.held.clear(); SI.pending = [];
+  SI.held.clear(); SI.pending = []; SI.last = null; SI.relSnap = null; SI.consumed = false;
   stepM.classList.add('show');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   siBuildLens(); siBuildPiano(); siRefresh();
@@ -3850,7 +3867,7 @@ window.addEventListener('keyup', e => {
   e.stopImmediatePropagation(); e.preventDefault();
   siNoteOff(e.code);
 }, true);
-window.addEventListener('blur', () => { if (stepM.classList.contains('show')) { SI.held.clear(); siLights(); } });
+window.addEventListener('blur', () => { if (stepM.classList.contains('show')) { SI.held.clear(); SI.relSnap = null; SI.consumed = false; siSyncPending(); siShowNow(); siLights(); } });
 window.addEventListener('resize', () => { if (stepM.classList.contains('show')) siDraw(); });
 
 // ───────── 사운드 편집기 (인스펙터 · 트랙 창 공용) ─────────
