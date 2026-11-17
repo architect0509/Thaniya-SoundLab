@@ -805,7 +805,7 @@ select,input[type=number]{border-radius:8px}
 
 /* 스텝 입력 → 넣을 위치 고르기 (모바일) */
 #rulerWrap{touch-action:none}
-#placeBar{display:none;position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:86;align-items:center;gap:8px;padding:8px;border-radius:16px;
+#placeBar{display:none;position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:86;align-items:center;gap:8px;padding:8px;border-radius:16px;
   background:linear-gradient(180deg,#23262c,#17181c);border:1px solid var(--accentLine);box-shadow:0 10px 30px rgba(0,0,0,.6),var(--glow)}
 body.placing #placeBar{display:flex}
 #placeBar .plTx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
@@ -813,7 +813,10 @@ body.placing #placeBar{display:flex}
 #placeBar #plPos{font-size:14px;font-weight:800}
 #placeBar small{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #placeBar .btn{padding:0 12px;height:42px;justify-content:center;white-space:nowrap}
-body.placing #rulerWrap{box-shadow:0 0 0 2px var(--accent) inset}
+body.placing #rulerWrap{box-shadow:0 0 0 2px var(--accent) inset,0 0 26px rgba(242,194,48,.6);background:#4a4d57}
+body.placing #ruler{filter:brightness(2.2) contrast(1.15)}
+body.placing #rulerWrap::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,236,170,.34),rgba(255,214,90,.2));mix-blend-mode:screen}
+.placeDim{position:fixed;z-index:84;background:rgba(4,5,7,.72);touch-action:none}
 @media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
   #stepModal .mfoot .af:has(#siWhere){display:none}
   #stepModal .mfoot .siGrp{flex:none;display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
@@ -4226,19 +4229,34 @@ $('siExport').onclick = () => siMobile() ? siStartPlace() : siExport();
   place(); window.addEventListener('resize', place);
 }
 // 모바일 내보내기: 창을 잠깐 숨기고 재생 위치(▼)를 옮겨 넣을 곳을 고름
-let placeT = 0, placePrevTool = null;
+let placeT = 0, placePrevTool = null, placeDims = [], rulerEdgeX = null;
+function placeLayoutDims() {
+  const r = $('rulerWrap').getBoundingClientRect(), W = window.innerWidth, H = window.innerHeight;
+  const box = [[0, 0, W, r.top], [0, r.bottom, W, H - r.bottom], [0, r.top, r.left, r.height], [r.right, r.top, W - r.right, r.height]];
+  placeDims.forEach((d, i) => { const [x, y, w, h] = box[i]; Object.assign(d.style, { left: x + 'px', top: y + 'px', width: Math.max(0, w) + 'px', height: Math.max(0, h) + 'px' }); });
+}
 function siStartPlace() {
   if (!SI.notes.length) { toast('보드가 비어 있어요'); return; }
   siStopPlay(); SI.held.clear(); stepM.classList.remove('show');
   document.body.classList.add('placing');
+  placeDims = [0, 1, 2, 3].map(() => { const d = document.createElement('div'); d.className = 'placeDim'; d.addEventListener('pointerdown', e => e.preventDefault()); document.body.appendChild(d); return d; });
+  placeLayoutDims(); window.addEventListener('resize', placeLayoutDims);
   placePrevTool = S.tool; setTool('hand', true);   // 화면을 밀어 이동 가능 · 실수로 노트가 찍히지 않게
-  const sync = () => { const st = Math.max(0, Math.round(playhead / S.grid) * S.grid); $('plPos').textContent = siBeat(st); };
-  sync(); clearInterval(placeT); placeT = setInterval(sync, 120);
+  const sync = () => {
+    const st = Math.max(0, Math.round(playhead / S.grid) * S.grid); $('plPos').textContent = siBeat(st);
+    if (rulerEdgeX != null) {   // 눈금자 끝으로 끌면 화면도 따라 이동
+      const r = $('rulerWrap').getBoundingClientRect();
+      if (rulerEdgeX < r.left + 40) scroller.scrollLeft -= 10; else if (rulerEdgeX > r.right - 40) { if (scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 4) ensureLength((scroller.scrollLeft + scroller.clientWidth) / STEP_W + 16); scroller.scrollLeft += 10; }
+      playhead = Math.max(0, Math.round((rulerEdgeX - r.left + scroller.scrollLeft) / STEP_W / S.grid) * S.grid); drawAll();
+    }
+  };
+  sync(); clearInterval(placeT); placeT = setInterval(sync, 40);
   const x = playhead * STEP_W; if (x < scroller.scrollLeft + 20 || x > scroller.scrollLeft + scroller.clientWidth - 20) scroller.scrollLeft = Math.max(0, x - scroller.clientWidth / 2);
   drawAll();
 }
 function siEndPlace(back) {
-  clearInterval(placeT); document.body.classList.remove('placing');
+  clearInterval(placeT); rulerEdgeX = null; document.body.classList.remove('placing');
+  placeDims.forEach(d => d.remove()); placeDims = []; window.removeEventListener('resize', placeLayoutDims);
   if (placePrevTool) { setTool(placePrevTool, true); placePrevTool = null; }
   if (back) { stepM.classList.add('show'); siRefresh(); }
 }
@@ -4248,10 +4266,10 @@ $('plOk').onclick = () => { const at = playhead; siEndPlace(false); siExport(at)
 // 눈금자를 끌어서 재생 위치 이동 (터치)
 {
   let rid = null; const rw = $('rulerWrap');
-  const mv = e => { const r = rw.getBoundingClientRect(); playhead = Math.max(0, Math.round((e.clientX - r.left + scroller.scrollLeft) / STEP_W / S.grid) * S.grid); drawAll(); };
-  rw.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && mode === 'idle') { rid = e.pointerId; try { rw.setPointerCapture(rid); } catch (_) {} } });
+  const mv = e => { rulerEdgeX = e.clientX; const r = rw.getBoundingClientRect(); playhead = Math.max(0, Math.round((e.clientX - r.left + scroller.scrollLeft) / STEP_W / S.grid) * S.grid); drawAll(); };
+  rw.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && mode === 'idle') { rid = e.pointerId; rulerEdgeX = e.clientX; try { rw.setPointerCapture(rid); } catch (_) {} } });
   rw.addEventListener('pointermove', e => { if (rid === e.pointerId && mode === 'idle') mv(e); });
-  const up = e => { if (rid === e.pointerId) rid = null; };
+  const up = e => { if (rid === e.pointerId) { rid = null; rulerEdgeX = null; } };
   rw.addEventListener('pointerup', up); rw.addEventListener('pointercancel', up);
 }
 
