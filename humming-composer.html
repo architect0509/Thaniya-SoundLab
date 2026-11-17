@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <link rel="icon" href="./Asset/icon.png" type="image/png">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Thaniya-SoundLab</title>
 <style>
 :root{
@@ -528,6 +528,65 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
 @media (max-width:1200px){ #topbar .stk{font-size:0;gap:0} #topbar #zoomVal{display:none} #topbar .sep{display:none} #topbar{gap:4px} }
 @media (max-width:1050px){ #topbar .ib{min-width:24px;height:24px} #topbar .ib svg.i{width:14px;height:14px} #topbar #palette.docked .ib{width:24px;height:24px} #topbar .songName{width:86px} }
 @media (max-width:920px){ #topbar #key{max-width:78px} #topbar #labelMode{max-width:62px} #topbar .songName{width:64px} #topbar{padding:0 5px} }
+/* ───────── 모바일 / 좁은 화면 대응 ───────── */
+html,body{height:100dvh}
+@media (max-width:900px){
+  body{padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));gap:4px}
+  #topbar,#transport{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #topbar::-webkit-scrollbar,#transport::-webkit-scrollbar{display:none}
+  #topbar>*,#transport>*{flex:none}
+  #transport{gap:10px}
+  #editor{grid-template-columns:64px 1fr}
+}
+@media (max-width:760px){
+  #main{position:relative}
+  #rzL,#rzR{display:none}
+  /* 좌우 패널은 화면 위에 덮이는 서랍 형태 */
+  #side,#insp{position:absolute;top:0;bottom:0;z-index:20;width:min(84vw,330px);box-shadow:0 0 28px rgba(0,0,0,.65)}
+  #side{left:0}
+  #insp{right:0}
+  #editor{grid-template-columns:52px 1fr}
+  #recPanel{max-height:75%;overflow:auto}
+  .rpFoot{flex-wrap:wrap}
+  .sideHint{display:none}
+}
+@media (pointer:coarse){
+  #topbar .ib{min-width:32px;height:32px}
+  #topbar .ib svg.i{width:16px;height:16px}
+  #topbar #palette.docked .ib{width:32px;height:32px}
+  /* 손 도구가 아닐 때는 터치 드래그를 노트 편집에 쓰고, 손 도구일 때만 스크롤 */
+  body:not([data-tool="hand"]) #scroller{touch-action:none}
+}
+/* 모바일: 더보기 / 편집 바 */
+#moreBtn,#editBar{display:none}
+#moreM{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;background:rgba(0,0,0,.55)}
+#moreM.show{display:flex}
+.moreBox{width:100%;max-height:80dvh;overflow:auto;background:var(--panel);border-top:1px solid var(--line2);border-radius:16px 16px 0 0;padding:12px 12px max(14px,env(safe-area-inset-bottom))}
+.moreHead{display:flex;align-items:center;justify-content:space-between;font-size:14px}
+.moreT{font-size:11px;color:var(--muted);font-weight:700;margin:14px 2px 6px}
+.moreGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.moreGrid .btn{justify-content:center;width:100%;padding:11px 8px;font-size:13px}
+.moreGrid .btn.on{border-color:var(--accentLine);color:var(--accent);background:var(--accentDim)}
+.moreF{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:11px}
+.moreF select,.moreF input{height:38px;font-size:14px;width:100%}
+.moreF.zoom{flex-direction:row;align-items:center;justify-content:space-between;grid-column:1/-1;color:var(--text);font-size:13px}
+.moreF.zoom .btn{width:46px;padding:8px 0}
+@media (max-width:760px){
+  body{grid-template-rows:50px 1fr auto 62px}
+  body #topbar .mobHide,body #transport .mobHide{display:none!important}
+  #topbar{overflow:hidden;gap:4px;padding:0 6px}
+  #topbar .lgName,#topbar .spacer,#topbar #toolDock{display:none}
+  #topbar .songName{flex:1 1 0;min-width:0;width:auto}
+  #palette{display:none!important}   /* 도구는 아래 편집 바로 */
+  #moreBtn{display:flex}
+  #editBar{display:flex;flex-direction:column;gap:4px;padding:4px 6px}
+  #editBar .ebRow{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none}
+  #editBar .ebRow::-webkit-scrollbar{display:none}
+  #editBar .ib{flex:1 1 0;min-width:34px;max-width:60px;height:32px;border:1px solid var(--line2);background:var(--panel2);border-radius:8px}
+  #editBar .ib.on{background:#2c2f35;border-color:var(--accentLine);color:var(--accent)}
+  #editBar .ebRow .btn{flex:1 0 auto;padding:6px 9px;font-size:12px;justify-content:center;white-space:nowrap}
+  .ebSep{width:1px;height:20px;background:var(--line2);flex:none;margin:0 2px}
+}
 </style>
 </head>
 <body>
@@ -537,35 +596,36 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
   <input type="text" id="songName" class="songName" maxlength="40" title="곡 이름 (클릭해서 바꾸기)">
   <div id="toolDock" title="도구 패널을 여기로 끌어다 놓으면 고정돼요"></div>
   <div class="sep"></div>
-  <div class="pill" title="격자 (스냅)">
+  <div class="pill mobHide" title="격자 (스냅)">
     <span class="ib" style="cursor:default" data-icon="magnet"></span>
     <select id="grid"><option value="1">1/16</option><option value="2">1/8</option><option value="4">1/4</option><option value="8">1/2</option></select>
   </div>
-  <div class="pill" title="확대/축소 — Ctrl+휠(화면 전체), Ctrl+Shift+휠(가로만), Ctrl+Alt+휠(세로만), Ctrl+우클릭 드래그">
+  <div class="pill mobHide" title="확대/축소 — Ctrl+휠(화면 전체), Ctrl+Shift+휠(가로만), Ctrl+Alt+휠(세로만), Ctrl+우클릭 드래그">
     <button class="ib" id="zoomOut" data-icon="minus"></button>
     <span id="zoomVal">100%</span>
     <button class="ib" id="zoomIn" data-icon="plus"></button>
   </div>
-  <label class="stk">스케일<select id="key"></select></label>
-  <label class="stk">표기<select id="labelMode"><option value="sol">도레미</option><option value="abc">C D E</option></select></label>
+  <label class="stk mobHide">스케일<select id="key"></select></label>
+  <label class="stk mobHide">표기<select id="labelMode"><option value="sol">도레미</option><option value="abc">C D E</option></select></label>
   <div class="sep"></div>
   <div class="pill">
     <button class="ib" id="undoBtn" data-icon="undo" title="되돌리기 (Ctrl+Z)"></button>
     <button class="ib" id="redoBtn" data-icon="redo" title="다시 실행 (Ctrl+Shift+Z)"></button>
   </div>
-  <div class="pill"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span><span class="wl">반주 · 비트</span></button></div>
-  <div class="pill"><button class="ib wide" id="stepBtn" title="스텝 입력 (Musical Typing) — 컴퓨터 키보드로 건반을 쳐서 멜로디 넣기 (K)"><span data-icon="keys"></span><span class="wl">스텝 입력</span></button></div>
+  <div class="pill mobHide"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span><span class="wl">반주 · 비트</span></button></div>
+  <div class="pill mobHide"><button class="ib wide" id="stepBtn" title="스텝 입력 (Musical Typing) — 컴퓨터 키보드로 건반을 쳐서 멜로디 넣기 (K)"><span data-icon="keys"></span><span class="wl">스텝 입력</span></button></div>
   <div class="spacer"></div>
-  <div class="pill engOnly"><button class="ib engSave" id="engSaveBtn" data-icon="upload" title="이 곡을 Thaniya Engine 프로젝트에 오디오로 저장 (Ctrl+S)"></button></div>
+  <div class="pill engOnly mobHide"><button class="ib engSave" id="engSaveBtn" data-icon="upload" title="이 곡을 Thaniya Engine 프로젝트에 오디오로 저장 (Ctrl+S)"></button></div>
   <div class="pill">
     <button class="ib" id="toggleL" data-icon="panelL" title="트랙 패널 보이기/숨기기 (Ctrl+[)"></button>
     <button class="ib" id="toggleR" data-icon="panelR" title="인스펙터 보이기/숨기기 (Ctrl+])"></button>
   </div>
-  <div class="pill">
+  <div class="pill mobHide">
     <button class="ib" id="midiBtn" data-icon="download" title="MIDI 내보내기 (트랙별)"></button>
     <button class="ib" id="clearBtn" data-icon="trash" title="현재 트랙 노트 모두 지우기"></button>
     <button class="ib" id="helpBtn" title="단축키 도움말">?</button>
   </div>
+  <button class="ib" id="moreBtn" title="더보기 메뉴"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
 </header>
 
 <div id="main">
@@ -623,6 +683,29 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
   </aside>
 </div>
 
+<div id="editBar" class="panel">
+  <div class="ebRow">
+    <button class="ib" data-et="hand" data-icon="hand" title="손 — 화면 이동"></button>
+    <button class="ib" data-et="select" data-icon="select" title="선택"></button>
+    <button class="ib" data-et="pen" data-icon="pen" title="펜"></button>
+    <button class="ib" data-et="eraser" data-icon="eraser" title="지우개"></button>
+    <button class="ib" data-et="range" data-icon="range" title="영역 선택"></button>
+    <button class="ib" data-et="picker" data-icon="picker" title="스포이트"></button>
+    <span class="ebSep"></span>
+    <button class="ib" id="ebZoomOut" data-icon="minus" title="축소"></button>
+    <button class="ib" id="ebZoomIn" data-icon="plus" title="확대"></button>
+  </div>
+  <div class="ebRow">
+    <button class="btn" data-ed="copy">복사</button>
+    <button class="btn" data-ed="cut">잘라내기</button>
+    <button class="btn" data-ed="paste">붙여넣기</button>
+    <button class="btn" data-ed="dup">복제</button>
+    <button class="btn" data-ed="del">삭제</button>
+    <button class="btn" data-ed="all">전체선택</button>
+    <button class="btn" data-ed="none">선택해제</button>
+  </div>
+</div>
+
 <footer id="transport" class="panel">
   <div class="grp" style="display:flex;gap:4px">
     <button class="ib big" id="homeBtn" data-icon="home" title="처음으로"></button>
@@ -631,13 +714,13 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
     <button class="ib big rec" id="recBtn" data-icon="rec" title="녹음 (Shift+R) — 끝나면 노트 변환 미리보기"></button>
   </div>
   <div class="lcd"><div id="posBar">1.1.1</div><div id="posTime">00:00.0</div></div>
-  <div class="pill" style="gap:6px;padding:3px 8px">
+  <div class="pill mobHide" style="gap:6px;padding:3px 8px">
     <label class="stk">BPM<input id="bpm" type="number" min="40" max="240"></label>
     <button class="ib" id="metroBtn" data-icon="metro" title="메트로놈"></button>
     <button class="ib" id="countBtn" data-icon="countin" title="카운트인 1마디"></button>
   </div>
-  <div class="sep"></div>
-  <div style="display:flex;align-items:center;gap:10px">
+  <div class="sep mobHide"></div>
+  <div class="mobHide" style="display:flex;align-items:center;gap:10px">
     <button class="ib" id="monBtn" data-icon="mic" title="마이크 테스트 (녹음 없이 음정 확인)"></button>
     <button class="ib" id="fileBtn" data-icon="upload" title="오디오 파일에서 멜로디 따기 (mp3, wav 등)"></button>
     <input type="file" id="fileIn" accept="audio/*" hidden>
@@ -646,6 +729,8 @@ kbd{background:#0f1013;border:1px solid var(--line2);border-radius:4px;padding:0
     <label class="lab">감도<input type="range" id="gate" min="0.002" max="0.05" step="0.001" value="0.012" style="direction:rtl;width:90px"></label>
   </div>
 </footer>
+
+<div id="moreM"><div class="moreBox"><div class="moreHead"><b>메뉴</b><button class="btn" id="moreClose">닫기</button></div><div id="moreBody"></div></div></div>
 
 <div id="palette">
   <div class="pgrip" id="pgrip" title="끌어서 이동 · 상단 바에 놓으면 고정" data-icon="grip"></div>
@@ -4596,7 +4681,8 @@ $('addTrack').onclick = () => openTrackModal();
 // ───────── 도구 팔레트 ─────────
 const pal = $('palette'), dockEl = $('toolDock'), topbar = $('topbar');
 function setTool(t, temp = false) {
-  S.tool = t;
+  S.tool = t; document.body.dataset.tool = t;
+  document.querySelectorAll('#editBar [data-et]').forEach(b => b.classList.toggle('on', b.dataset.et === t));
   pal.querySelectorAll('.tool').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
   scroller.style.cursor = CURSOR[t]; if (!temp) saveSoon();
 }
@@ -4647,6 +4733,8 @@ pal.querySelectorAll('.tool').forEach(b => b.addEventListener('click', () => set
 
 // ───────── 좌우 패널 크기 조절 / 숨기기 ─────────
 S.ui = Object.assign({ lw: 214, rw: 288, lHide: false, rHide: false }, S.ui || {});
+const isMobile = () => window.innerWidth <= 760;
+if (isMobile()) { S.ui.lHide = true; S.ui.rHide = true; }   // 모바일은 처음엔 패널을 닫고 시작
 function applyPanels() {
   const m = $('main');
   m.style.setProperty('--lw', S.ui.lw + 'px'); m.style.setProperty('--rw', S.ui.rw + 'px');
@@ -4659,7 +4747,16 @@ function applyPanels() {
     if (S.pal.x < r.left + 4 || S.pal.x + w > r.right - 4) { S.pal.x = clamp(S.pal.x, r.left + 14, r.right - w - 14); placePal(); }
   }
 }
-function togglePanel(side) { const k = side === 'L' ? 'lHide' : 'rHide'; S.ui[k] = !S.ui[k]; applyPanels(); saveSoon(); }
+function togglePanel(side) {
+  const k = side === 'L' ? 'lHide' : 'rHide', o = side === 'L' ? 'rHide' : 'lHide';
+  S.ui[k] = !S.ui[k];
+  if (isMobile() && !S.ui[k]) S.ui[o] = true;   // 모바일: 서랍은 한 번에 하나만
+  applyPanels(); saveSoon();
+}
+// 모바일: 편집 영역을 누르면 열린 서랍 닫기
+$('center').addEventListener('pointerdown', () => {
+  if (isMobile() && (!S.ui.lHide || !S.ui.rHide)) { S.ui.lHide = true; S.ui.rHide = true; applyPanels(); }
+}, true);
 function startResize(e, side) {
   e.preventDefault();
   const rz = e.currentTarget, wKey = side === 'L' ? 'lw' : 'rw', hKey = side === 'L' ? 'lHide' : 'rHide';
@@ -4982,6 +5079,8 @@ if (ENG.on) {
 // ───────── 시작 ─────────
 renderList(); renderInspector(); setButtons(); gateMark(); updateSongTitle();
 applyPanels();
+document.body.dataset.tool = S.tool;
+document.querySelectorAll('#editBar [data-et]').forEach(b => b.classList.toggle('on', b.dataset.et === S.tool));
 setTool(S.tool);
 { // 홈(index.html)에서 넘어온 요청: ?open=<id> · ?new=1 · #mypage
   const q = new URLSearchParams(location.search), oid = q.get('open');
@@ -4994,6 +5093,66 @@ $('zoomVal').textContent = Math.round(STEP_W / 22 * 100) + '%';
 if (isDrumTrack(activeTrack())) scrollToDrums(); else scroller.scrollTop = (HIGH - 64) * ROW_H - scroller.clientHeight / 2;
 placePal();
 drawAll();
+// ───────── 모바일: 편집 바 · 더보기 패널 ─────────
+{
+  document.querySelectorAll('#editBar [data-et]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.et)));
+  $('ebZoomIn').onclick = () => $('zoomIn').click();
+  $('ebZoomOut').onclick = () => $('zoomOut').click();
+  const ED = {
+    copy: () => { if (copySel(true)) toast(`노트 ${sel.size}개 복사했어요`); else toast('선택된 노트가 없어요'); },
+    cut: () => { if (copySel(true)) { const n = sel.size; deleteSel(); toast(`노트 ${n}개 잘라냈어요`); } else toast('선택된 노트가 없어요'); },
+    paste: () => { if (clip) toast('재생 위치에 붙여넣었어요 (눈금자를 눌러 위치 이동)'); paste(); },
+    dup: () => duplicate(),
+    del: () => { if (sel.size) deleteSel(); else toast('선택된 노트가 없어요'); },
+    all: () => { sel = new Set(S.notes.filter(n => n.t === S.active)); drawAll(); },
+    none: () => { sel = new Set(); drawAll(); }
+  };
+  document.querySelectorAll('#editBar [data-ed]').forEach(b => b.addEventListener('click', () => ED[b.dataset.ed]()));
+
+  const more = $('moreM'), mbody = $('moreBody'), syncs = [];
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const closeMore = () => more.classList.remove('show');
+  const section = t => { mbody.appendChild(mk('div', 'moreT', t)); const g = mk('div', 'moreGrid'); mbody.appendChild(g); return g; };
+  const fire = (o, ...ev) => ev.forEach(n => o.dispatchEvent(new Event(n, { bubbles: true })));
+  function actBtn(g, label, id, o = {}) {
+    const b = mk('button', 'btn', label);
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.onclick = () => { if (!o.stay) closeMore(); $(id).click(); if (o.stay) syncs.forEach(f => f()); };
+    syncs.push(() => { b.classList.toggle('on', !!o.toggle && $(id).classList.contains('on')); if (o.engOnly) b.style.display = document.body.classList.contains('engine') ? '' : 'none'; });
+    g.appendChild(b);
+  }
+  function selBox(g, label, id) {
+    const w = mk('label', 'moreF', label), s = mk('select'); w.appendChild(s); g.appendChild(w);
+    syncs.push(() => { const o = $(id); s.innerHTML = o.innerHTML; s.value = o.value; });
+    s.onchange = () => { const o = $(id); o.value = s.value; fire(o, 'input', 'change'); };
+  }
+  function inBox(g, label, id, rtl) {
+    const w = mk('label', 'moreF', label), i = mk('input'); w.appendChild(i); g.appendChild(w);
+    if (rtl) i.style.direction = 'rtl';
+    syncs.push(() => { const o = $(id); ['type', 'min', 'max', 'step'].forEach(a => o.getAttribute(a) != null && i.setAttribute(a, o.getAttribute(a))); i.value = o.value; });
+    i.oninput = () => { const o = $(id); o.value = i.value; if (i.type === 'range') fire(o, 'input'); };
+    i.onchange = () => { const o = $(id); o.value = i.value; fire(o, 'input', 'change'); };
+  }
+  let g = section('곡 설정');
+  selBox(g, '격자 (스냅)', 'grid'); selBox(g, '스케일', 'key'); selBox(g, '건반 표기', 'labelMode'); inBox(g, 'BPM', 'bpm');
+  g = section('재생 · 녹음');
+  actBtn(g, '메트로놈', 'metroBtn', { stay: true, toggle: true }); actBtn(g, '카운트인', 'countBtn', { stay: true, toggle: true });
+  actBtn(g, '마이크 테스트', 'monBtn'); actBtn(g, '오디오 파일에서 멜로디', 'fileBtn');
+  inBox(g, '녹음 감도', 'gate', true); g.lastChild.style.gridColumn = '1/-1';
+  g = section('만들기');
+  actBtn(g, '반주 · 비트', 'accBtn'); actBtn(g, '스텝 입력', 'stepBtn'); actBtn(g, '엔진에 저장', 'engSaveBtn', { engOnly: true });
+  g = section('보기');
+  const z = mk('div', 'moreF zoom'), zv = mk('span'); const zb = (t, id) => { const b = mk('button', 'btn', t); b.onclick = () => { $(id).click(); zv.textContent = $('zoomVal').textContent; }; return b; };
+  z.append('확대 / 축소', zb('−', 'zoomOut'), zv, zb('+', 'zoomIn')); g.appendChild(z);
+  syncs.push(() => zv.textContent = $('zoomVal').textContent);
+  g = section('파일 · 기타');
+  actBtn(g, 'MIDI 내보내기', 'midiBtn'); actBtn(g, '노트 모두 지우기', 'clearBtn'); actBtn(g, '단축키 도움말', 'helpBtn');
+
+  $('moreBtn').onclick = () => { syncs.forEach(f => f()); more.classList.add('show'); };
+  $('moreClose').onclick = closeMore;
+  more.addEventListener('pointerdown', e => { if (e.target === more) closeMore(); });
+  window.addEventListener('resize', () => { if (innerWidth > 760) closeMore(); });
+}
 })();
 </script>
 </body>
