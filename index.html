@@ -450,6 +450,44 @@
       .cta { padding: 32px 22px; }
       .tp-popup { right: 12px; bottom: 12px; width: min(252px, calc(100vw - 24px)); }
     }
+    /* ---------- 모바일 보강 ---------- */
+    @media (max-width: 640px) {
+      .nav-inner { padding: 10px max(14px, env(safe-area-inset-left)); }
+      .brand-name { font-size: 15px; }
+      .logo-box { width: 30px; height: 30px; }
+      .nav-links .btn { padding: 8px 12px; font-size: 13px; }
+      .hero-inner { gap: 28px; }
+      .hero-title { font-size: clamp(30px, 9vw, 40px); }
+      .hero-desc { font-size: 14px; line-height: 1.7; }
+      .hero-desc br { display: none; }
+      .hero-actions { width: 100%; }
+      .hero-actions .btn { flex: 1 1 0; padding: 13px 10px; font-size: 14px; }
+      .daw-body { height: 200px; }
+      .eq { height: 38px; }
+      .piano { height: 96px; }
+      .section-title { font-size: 22px; }
+      .section-head { margin-bottom: 18px; }
+      .feat { padding: 18px 16px; }
+      .step { padding: 18px 18px 20px; }
+      .song-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .thumb { height: 100px; }
+      .meta { padding: 11px 11px 12px; gap: 6px; }
+      .meta-title { font-size: 13.5px; padding-right: 0; }
+      .chip { font-size: 9.5px; padding: 2px 5px; }
+      .meta-row .chip:nth-child(n+3) { display: none; }
+      .s-play { opacity: 1; transform: none; width: 36px; height: 36px; right: 8px; bottom: -16px; }
+      .song-new { min-height: 190px; }
+      .plus { width: 48px; height: 48px; border-radius: 14px; }
+      .more-row .btn { width: 100%; white-space: normal; text-align: center; font-size: 13px; }
+      .cta { padding: 26px 18px; }
+      .cta h2 { font-size: 20px; }
+      .cta .btn { width: 100%; }
+      .footer-inner { padding: 18px 16px; flex-direction: column; align-items: flex-start; }
+      .tp-popup { width: min(236px, calc(100vw - 24px)); }
+    }
+    @media (max-width: 360px) { .song-grid { grid-template-columns: 1fr; } }
+    @media (hover: none) { .feat:hover, .song:hover, .song-new:hover { transform: none; } .s-play { opacity: 1; transform: none; } }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
     }
