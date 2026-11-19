@@ -5,7 +5,7 @@
 <link rel="icon" href="./Asset/icon.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Thaniya-SoundLab</title>
-<link rel="stylesheet" href="app.css?v=20261119">
+<link rel="stylesheet" href="app.css?v=20261120e">
 </head>
 <body data-page="edit">
 
@@ -42,6 +42,7 @@
     <button class="ib" id="midiBtn" data-icon="download" title="내보내기 (프로젝트 · MIDI · MP3)"></button>
     <button class="ib" id="clearBtn" data-icon="trash" title="현재 트랙 노트 모두 지우기"></button>
     <button class="ib" id="helpBtn" title="단축키 도움말">?</button>
+    <button class="ib" id="tutBtn" title="튜토리얼 (처음 쓰는 법 둘러보기)"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></svg></button>
   </div>
   <button class="ib" id="fsBtn" data-icon="fsEnter" title="전체화면 (F11)"></button>
   <button class="ib" id="moreBtn" title="더보기 메뉴"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
@@ -120,6 +121,9 @@
     <button class="btn" data-ed="paste">붙여넣기</button>
     <button class="btn" data-ed="dup">복제</button>
     <button class="btn" data-ed="del">삭제</button>
+    <button class="btn" data-ed="link">이어 부르기</button>
+    <button class="btn" data-ed="group">묶기</button>
+    <button class="btn" data-ed="ungroup">묶음 풀기</button>
     <button class="btn" data-ed="all">전체선택</button>
     <button class="btn" data-ed="none">선택해제</button>
     <button class="ib ebClose" id="ebClose" title="닫기">✕</button>
@@ -303,71 +307,95 @@
 </div></div>
 <div id="stepModal"><div class="scard">
   <div class="mhead">
-    <div class="siTitle"><span data-icon="keys"></span>스텝 입력 <small>MUSICAL TYPING</small></div>
-    <span style="width:6px"></span>
-    <div class="siGrp" id="siOctGrp">옥타브
-      <div class="siOct"><button class="ib" id="siOctDn" title="옥타브 내리기"><kbd id="siOctDnK">-</kbd></button><b id="siOctV"></b><button class="ib" id="siOctUp" title="옥타브 올리기"><kbd id="siOctUpK">+</kbd></button></div>
+    <div class="siTitle"><span class="siLogo" data-icon="keys"></span>스텝 입력</div>
+    <div class="siGrp siCtl" id="siOctGrp" data-tip="옥타브" data-key="- / +">
+      <span class="siCap">옥타브</span>
+      <div class="siOct"><button class="ib" id="siOctDn" data-tip="옥타브 내리기" data-key="-"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12"/></svg><kbd id="siOctDnK" hidden></kbd></button><b id="siOctV"></b><button class="ib" id="siOctUp" data-tip="옥타브 올리기" data-key="+"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg><kbd id="siOctUpK" hidden></kbd></button></div>
     </div>
-    <div class="siGrp">음 길이 <div class="atabs" id="siLens"></div><span class="mhint">(<kbd>;</kbd> <kbd>'</kbd>)</span></div>
-    <label class="chk" title="켜면 건반을 떼는 순간 바로 보드에 들어가요 (Enter 없이)"><input type="checkbox" id="siAuto">바로 입력</label>
+    <div class="siGrp siCtl siLenCtl"><span class="siCap">음 길이</span><div class="atabs" id="siLens"></div></div>
+    <label class="chk siSwitch" data-tip="켜면 건반에서 손을 떼는 순간 바로 보드에 들어가요"><input type="checkbox" id="siAuto"><i></i><span>바로 입력</span></label>
     <span style="flex:1"></span>
-    <button class="btn sm" id="siRemapBtn" title="연주 키를 내 손에 맞게 바꾸기"><span data-icon="rename"></span>연주 키 설정</button>
-    <button class="ib" id="siClose" data-icon="x" title="닫기 (Esc)"></button>
+    <button class="ib siHb" id="siKbBtn" data-tip="키보드 배치 보기 · 연주 키 바꾸기"><span data-icon="keys"></span></button>
+    <button class="ib siHb" id="siClose" data-icon="x" data-tip="닫기" data-key="Esc"></button>
+  </div>
+  <div class="siKbPop" id="siKbPop">
+    <div class="siKbPopHead"><b>키보드 배치</b><span class="siPopSub">누르면 노란색으로 켜져요</span><span style="flex:1"></span><button class="btn sm" id="siRemapBtn"><span data-icon="rename"></span>연주 키 바꾸기</button><button class="ib" id="siKbClose" data-icon="x"></button></div>
+    <div class="siKb" id="siKb"></div>
   </div>
   <div class="sbody">
     <div class="siRemapBar" id="siRemapBar"><span id="siRemapMsg"></span><span style="flex:1"></span><button class="btn sm" id="siRemapReset">기본 배치로</button><button class="btn sm primary" id="siRemapDone">설정 끝</button></div>
     <div class="siTop">
       <div class="siNow">
-        <div><div class="lbl">지금 누른 음</div><div class="nm idle" id="siNowNm">건반을 눌러 보세요</div><div class="sub" id="siNowSub"></div></div>
-        <div><div class="sub" id="siPos" style="margin-bottom:6px"></div>
-        <button class="btn primary" id="siCommit" style="width:100%">보드에 넣기 (Space)</button>
-        <div class="siMobCur"><button class="btn" id="siCurL" title="입력 위치 뒤로">◀</button><button class="btn" id="siCurR" title="입력 위치 앞으로">▶</button></div>
-        <div style="display:flex;gap:6px;margin-top:6px"><button class="btn sm" id="siRest" style="flex:1" title="쉼표 — 지금 길이만큼 비우고 다음 칸으로 (Shift+Space)">쉼표</button><button class="btn sm" id="siBack" style="flex:1" title="마지막 음 지우기 (Backspace)">지우기</button></div></div>
+        <div class="siNowMain"><div class="lbl">지금 누른 음</div><div class="nm idle" id="siNowNm">♪</div><div class="sub" id="siNowSub"></div></div>
+        <div class="siNowFoot"><div class="siPos" id="siPos" data-tip="다음 입력 위치 — 보드의 노란 줄"></div>
+        <button class="btn primary" id="siCommit" data-tip="누르고 있는 건반을 보드에 넣기 · 아무 건반도 안 누르면 한 칸 앞으로" data-key="Space">보드에 넣기</button>
+        <div class="siMobCur"><button class="btn" id="siCurL" data-tip="입력 위치 뒤로">◀</button><button class="btn" id="siCurR" data-tip="입력 위치 앞으로">▶</button></div>
+        <div class="siNowBtns"><button class="btn" id="siRest" data-tip="쉼표 — 지금 길이만큼 비우고 다음 칸으로" data-key="Space (빈손)">쉼표</button><button class="btn" id="siBack" data-tip="마지막 음 지우기" data-key="Backspace">지우기</button></div></div>
       </div>
-      <div class="siKb" id="siKb"></div>
+    </div>
+    <div class="siBoardBox">
+      <div class="siBoardTop">
+        <div class="siStepBar">
+          <button class="siBackList" id="siCurStep" data-tip="스텝 목록으로 돌아가기"><span data-icon="back"></span><span>스텝 목록</span></button>
+          <b class="siCurName" id="siCurName"></b><span class="siCurInfo" id="siCurInfo"></span>
+        </div>
+        <div class="siBoardHead">
+          <button class="ib siTb" id="siTight" data-tip="모두 한 칸 붙이기 — 음 사이 빈 칸을 한 칸씩 줄이기" data-key="Ctrl+["><svg class="i" viewBox="0 0 24 24"><path d="M2 12h7M6 8.5 9.5 12 6 15.5M22 12h-7M18 8.5 14.5 12 18 15.5M12 5v14"/></svg></button>
+          <button class="ib siTb" id="siSpread" data-tip="모두 한 칸 띄우기 — 음 사이를 한 칸씩 벌리기" data-key="Ctrl+]"><svg class="i" viewBox="0 0 24 24"><path d="M9 12H2M5.5 8.5 2 12l3.5 3.5M15 12h7M18.5 8.5 22 12l-3.5 3.5M12 5v14"/></svg></button>
+          <span class="siTbSep"></span>
+          <button class="ib siTb siMob" id="siDelBtn" data-tip="선택한 노트 삭제" data-icon="eraser"></button>
+          <button class="ib siTb" id="siUndo" data-tip="보드 되돌리기" data-key="Ctrl+Z"><span data-icon="undo"></span></button>
+          <button class="ib siTb" id="siClear" data-tip="이 스텝 보드 비우기"><span data-icon="trash"></span></button>
+          <button class="ib siTb siHelp" id="siHelpBtn">?</button>
+          <button class="btn siPlayBtn" id="siPlay" data-tip="이 스텝 전체 재생 · 정지" data-key="Enter"><span data-icon="play"></span>재생</button>
+        </div>
+      </div>
+      <div id="siBoardWrap"><canvas id="siBoard"></canvas></div>
     </div>
     <div id="siPiano"></div>
-    <div class="siBoardBox">
-      <div class="siBoardHead">
-        <div class="asecT" style="margin:0;white-space:nowrap">임시 보드</div>
-        <span style="flex:1"></span>
-        <button class="btn sm" id="siPlay" title="보드 전체 재생 · 정지 (Enter)"><span data-icon="play"></span>전체 재생</button>
-        <button class="btn sm siMob" id="siDelBtn" title="선택한 노트 삭제">삭제</button>
-        <button class="btn sm" id="siUndo" title="보드 되돌리기 (Ctrl+Z)"><span data-icon="undo"></span></button>
-        <button class="btn sm" id="siClear" title="보드 비우기"><span data-icon="trash"></span></button>
-      </div>
-      <div id="siBoardWrap" style="margin-top:7px"><canvas id="siBoard"></canvas></div>
-      <div class="siGuide">
-        <div class="g"><span class="gt">입력 위치</span>
-          <span class="it"><kbd>A</kbd><kbd>→</kbd> 음 길이만큼 앞으로</span>
-          <span class="it"><kbd>←</kbd> 뒤로</span>
-          <span class="it"><b>빈 곳 클릭</b> 그 자리로</span></div>
-        <div class="g"><span class="gt">마우스</span>
-          <span class="it"><b>드래그</b> 옮기기</span>
-          <span class="it"><kbd>Shift</kbd>+<b>클릭</b> 여러 개 선택</span>
-          <span class="it"><b>우클릭</b> 삭제</span></div>
-        <div class="g"><span class="gt">선택한 노트</span>
-          <span class="it"><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd> 옮기기</span>
-          <span class="it"><kbd>↑</kbd><kbd>↓</kbd> 반음</span>
-          <span class="it"><kbd>Shift</kbd>+<kbd>↑</kbd><kbd>↓</kbd> 옥타브</span>
-          <span class="it"><kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd> 길이</span>
-          <span class="it"><kbd>Delete</kbd> 삭제</span></div>
-      </div>
-    </div>
+  </div>
+  <div class="siHelpPop" id="siHelpPop">
+    <div class="hg"><div class="ht">연주 · 입력</div>
+      <div class="hr"><span>건반 누른 채</span><kbd>Space</kbd><em>보드에 넣기 (여러 키 = 화음)</em></div>
+      <div class="hr"><span>아무것도 안 누르고</span><kbd>Space</kbd><em>한 칸 앞으로 (쉼표)</em></div>
+      <div class="hr"><kbd>←</kbd><kbd>→</kbd><em>입력 위치 이동</em></div>
+      <div class="hr"><kbd>-</kbd><kbd>+</kbd><em>옥타브</em><kbd>;</kbd><kbd>'</kbd><em>음 길이</em></div>
+      <div class="hr"><kbd>Backspace</kbd><em>마지막 음 지우기</em><kbd>Enter</kbd><em>재생</em></div></div>
+    <div class="hg"><div class="ht">보드</div>
+      <div class="hr"><span>빈 곳 클릭</span><em>입력 위치 옮기기</em></div>
+      <div class="hr"><span>드래그</span><em>노트 옮기기</em><span>Shift+클릭</span><em>여러 개</em><span>우클릭</span><em>삭제</em></div>
+      <div class="hr"><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd><em>선택 이동</em><kbd>↑</kbd><kbd>↓</kbd><em>반음</em><kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd><em>길이</em></div></div>
+    <div class="hg"><div class="ht">스텝 · 내보내기</div>
+      <div class="hr"><kbd>Ctrl</kbd>+<kbd>[</kbd><kbd>]</kbd><em>모두 붙이기 · 띄우기</em></div>
+      <div class="hr"><kbd>Ctrl</kbd>+<kbd>Enter</kbd><em>따로</em><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd><em>묶음으로 내보내기</em></div></div>
   </div>
   <div class="mfoot">
-    <label class="af">넣을 트랙<select id="siTrack"></select></label>
-    <label class="af">넣을 위치<select id="siWhere"><option value="head">재생 위치</option><option value="end">트랙 마지막 노트 뒤</option><option value="start">곡 처음</option></select></label>
-    <span class="mhint" id="siSum" style="margin-left:4px"></span>
+    <label class="af" data-tip="노트를 넣을 트랙"><span class="siCap">트랙</span><select id="siTrack"></select></label>
+    <label class="af" data-tip="편집 화면 어디에 넣을지"><span class="siCap">위치</span><select id="siWhere"><option value="head">재생 위치</option><option value="end">트랙 마지막 노트 뒤</option><option value="start">곡 처음</option></select></label>
+    <span class="siSum" id="siSum"></span>
     <span style="flex:1"></span>
-    <button class="btn" id="siCancel">닫기</button><button class="btn primary" id="siExport"><span data-icon="download"></span>내보내기<span class="siKbHint"> (Ctrl+Enter)</span></button>
+    <button class="btn ghost" id="siCancel">닫기</button>
+    <button class="btn" id="siExport" data-tip="따로 내보내기 — 노트를 낱개로 넣어요" data-key="Ctrl+Enter"><span data-icon="download"></span><span>따로<span class="ssL"> 내보내기</span></span></button>
+    <button class="btn primary" id="siExportB" data-tip="묶음으로 내보내기 — 스텝 하나가 한 덩어리로 들어가 통째로 선택돼요" data-key="Ctrl+Shift+Enter"><span data-icon="download"></span><span>묶음<span class="ssL">으로 내보내기</span></span></button>
   </div>
 </div></div>
+<div id="stepMgr"><div class="smCard">
+  <div class="smHead">
+    <div class="smTitle"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>스텝 관리<span id="smCount"></span></div>
+    <span style="flex:1"></span>
+    <div class="smSort" id="smSort"><span class="siCap">정렬</span><button class="btn sm" data-sort="name" data-tip="이름순으로 정렬">이름</button><button class="btn sm" data-sort="notes" data-tip="노트가 많은 순으로 정렬">노트 수</button><button class="btn sm" data-sort="mod" data-tip="최근에 고친 순으로 정렬">최근 수정</button></div>
+    <button class="ib siHb" id="smClose" data-icon="x" data-tip="닫기" data-key="Esc"></button>
+  </div>
+  <div class="smGrid" id="smGrid"></div>
+  <div class="smFoot">카드를 누르면 편집 · 끌어서 순서 바꾸기<span class="smTouch">(터치는 꾹 누른 뒤)</span> · 체크한 스텝은 이 순서대로 내보내져요</div>
+</div></div>
+<div id="siTip"></div>
 <div id="placeBar"><button class="btn" id="plCancel" title="취소"><span data-icon="x"></span></button><div class="plTx"><b>넣을 위치</b><span id="plPos"></span><small>위 눈금자를 누르거나 끌어서 ▼를 옮기세요</small></div><button class="btn" id="plStart" title="곡 처음으로"><span data-icon="home"></span></button><button class="btn primary" id="plOk"><span data-icon="download"></span>여기에 넣기</button></div>
+<div id="tut"></div>
 <div id="toast"></div>
 <div id="ctx"></div>
 <div id="help"><div class="card">
-  <h3>도구 & 단축키</h3>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><h3 style="margin:0">도구 & 단축키</h3><span style="flex:1"></span><button class="btn sm" id="helpTutPc">PC 튜토리얼</button><button class="btn sm" id="helpTutMob">모바일 튜토리얼</button></div>
   <table>
     <tr><td><kbd>Q</kbd> 손</td><td>화면 끌어서 이동 (휠 클릭 드래그도 가능) · <kbd>Space</kbd>를 누르고 있는 동안 임시로 손 도구</td></tr>
     <tr><td><kbd>W</kbd> 선택</td><td>빈 곳 드래그 = 사각형 선택 · <kbd>Shift</kbd> 추가 · 선택 노트 드래그 = 이동 · <kbd>Alt</kbd>+드래그 = 복제</td></tr>
@@ -378,10 +406,12 @@
     <tr><td>확대 / 축소</td><td><kbd>Ctrl</kbd>+휠 = 화면 전체 · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+휠 = 가로만 · <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+휠 = 세로만 · <kbd>Ctrl</kbd>+우클릭 드래그 = 좌우로 가로, 위아래로 세로</td></tr>
     <tr><td>방향키 · <kbd>A</kbd> <kbd>D</kbd></td><td>(A = ←, D = →) 선택한 노트가 있으면 노트 이동 (←→ 격자, ↑↓ 반음, <kbd>Shift</kbd>+↑↓ 옥타브) · 선택이 없거나 붙여넣기 중이면 화면 이동 (<kbd>Shift</kbd> = 크게)</td></tr>
     <tr><td><kbd>Ctrl</kbd>+C / X / V / D / A</td><td>복사 / 잘라내기 / 붙여넣기(마우스를 따라다니다 클릭하면 놓기) / 바로 뒤에 복제 / 전체 선택</td></tr>
+    <tr><td>묶음 <kbd>Ctrl</kbd>+B</td><td>스텝 입력에서 '묶음'으로 내보낸 노트(점선 상자)는 하나만 눌러도 통째로 선택돼요 → 그대로 끌어 옮기기 · <b>이름표(▣ 이름)를 잡고 끌어도</b> 통째로 이동(Alt = 복제) · <kbd>Ctrl</kbd>+C/X/V · <kbd>Delete</kbd> · <kbd>Ctrl</kbd>+B = 선택한 노트 묶기 · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+B = 묶음 풀기</td></tr>
+    <tr><td>이어 부르기 <kbd>Ctrl</kbd>+L</td><td>선택한 노트를 앞 음과 한 음처럼 이어요 — 다시 치지 않고 음높이만 부드럽게 미끄러짐(흰 곡선 표시) · 빈틈은 앞 노트를 늘려 메움 · 보컬은 가사가 빈 노트가 앞 글자를 끌어 불러요 · 다시 누르면 풀기</td></tr>
     <tr><td><kbd>Ctrl</kbd>+Z / Shift+Z</td><td>되돌리기 / 다시 실행</td></tr>
     <tr><td><kbd>Space</kbd> 짧게 · <kbd>Shift</kbd>+<kbd>R</kbd> · <kbd>Esc</kbd></td><td>재생·정지 · 녹음 · 정지(선택 해제)</td></tr>
     <tr><td>반주 · 비트 <kbd>J</kbd></td><td>추천: 멜로디의 조·코드를 분석해 스타일별 반주 생성 · 샘플: 조와 코드 진행을 골라 반주 깔기 · 비트: 장르 비트 프리셋 + 16칸 스텝 편집(기본/필인), 스윙·사람 느낌 · 마디 줄은 편집 화면과 같이 스크롤</td></tr>
-    <tr><td>스텝 입력 <kbd>K</kbd></td><td>컴퓨터 키보드로 건반 연주 · <kbd>Z</kbd>~<kbd>M</kbd> = 도~시, <kbd>Q</kbd>~<kbd>]</kbd> = 한 옥타브 위 도~그 위 솔, 그 사이 윗줄 키 = 검은건반 · <kbd>-</kbd>/<kbd>+</kbd> 옥타브 · <kbd>Space</kbd> 보드에 넣기 · <kbd>Shift</kbd>+<kbd>Space</kbd> 쉼표 · <kbd>Enter</kbd> 보드 전체 재생/정지 · <kbd>A</kbd>·<kbd>←</kbd><kbd>→</kbd> 입력 위치를 음 길이만큼 이동 · <kbd>;</kbd>/<kbd>'</kbd> 음 길이 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 내보내기 · 창이 열린 동안 다른 단축키는 꺼져요 · 연주 키는 '연주 키 설정'에서 바꿀 수 있어요 · <b>모바일</b>: 아래 건반을 터치해서 연주(여러 손가락 = 화음) · 손을 떼면 보드에 들어가요('바로 입력') · 임시 보드는 빈 곳을 밀면 스크롤, 톡 치면 입력 위치 이동</td></tr>
+    <tr><td>스텝 입력 <kbd>K</kbd></td><td>컴퓨터 키보드로 건반 연주 · <kbd>Z</kbd>~<kbd>M</kbd> = 도~시, <kbd>Q</kbd>~<kbd>]</kbd> = 한 옥타브 위 도~그 위 솔, 그 사이 윗줄 키 = 검은건반 · <kbd>-</kbd>/<kbd>+</kbd> 옥타브 · 건반을 누른 채 <kbd>Space</kbd> 보드에 넣기 · 아무 건반도 안 누르고 <kbd>Space</kbd> = 한 칸 앞으로(쉼표) · <kbd>Enter</kbd> 보드 전체 재생/정지 · <kbd>←</kbd><kbd>→</kbd> 입력 위치를 음 길이만큼 이동 · <kbd>;</kbd>/<kbd>'</kbd> 음 길이 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 따로 내보내기 · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> 묶음으로 내보내기 · <b>스텝</b>: 보드를 여러 개 만들어 이름 짓기 · ▶ 미리 듣기 · 체크한 스텝을 차례로 내보내기 · <kbd>Ctrl</kbd>+<kbd>[</kbd>/<kbd>]</kbd> 모두 한 칸 붙이기/띄우기 · 창이 열린 동안 다른 단축키는 꺼져요 · 연주 키는 '연주 키 설정'에서 바꿀 수 있어요 · <b>모바일</b>: 아래 건반을 터치해서 연주(여러 손가락 = 화음) · 손을 떼면 보드에 들어가요('바로 입력') · 임시 보드는 빈 곳을 밀면 스크롤, 톡 치면 입력 위치 이동</td></tr>
     <tr><td>마이페이지</td><td>왼쪽 위 로고 아이콘 또는 <kbd>Ctrl</kbd>+O · 곡 목록, 새 곡, 이름 바꾸기, 복제, 삭제, 프로젝트(.json)/MIDI 불러오기·내보내기 · 곡의 '편집'을 누르면 에디터로</td></tr>
     <tr><td>트랙 목록</td><td>클릭: 선택 · 끌기: 순서 변경 · 우클릭: 메뉴 · 연필 버튼: 트랙 설정 · Ctrl/Shift+클릭: 여러 트랙 선택 · Ctrl+G: 폴더로 묶기</td></tr>
   </table>
@@ -391,7 +421,7 @@
 <script>
 /* 스크립트 로더: app.js 든 app.js.txt 든 있는 이름으로 불러오고, 서버가 .txt 를 text/plain(+nosniff)으로 막아도 내용을 읽어서 직접 실행함 */
 (function () {
-  var V = '?v=20261119', list = [['fullscreen.js', 'fullscreen.js.txt'], ['app.js', 'app.js.txt']];
+  var V = '?v=20261120e', list = [['fullscreen.js', 'fullscreen.js.txt'], ['app.js', 'app.js.txt']];
   function run(t, src) { var s = document.createElement('script'); s.text = t + '\n//# sourceURL=' + src; document.body.appendChild(s); }
   function one(names, ok, bad) {
     if (!names.length) return bad();
