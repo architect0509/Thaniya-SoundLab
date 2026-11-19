@@ -99,6 +99,8 @@
     }
     .btn:hover { background: var(--card-2); border-color: #3c4048; }
     .btn:active { transform: translateY(1px); }
+    .btn-icon { width: 40px; padding-left: 0; padding-right: 0; justify-content: center; }
+    .btn-icon.on { border-color: var(--accent); color: var(--accent); }
     .btn svg.i { width: 16px; height: 16px; }
     .btn-primary {
       background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
@@ -504,6 +506,7 @@
       <div class="nav-links">
         <a href="#features" class="nav-link hide-sm">기능</a>
         <a href="#songs" class="nav-link hide-sm">내 곡</a>
+        <button class="btn btn-icon" id="homeFs" type="button" title="전체화면" aria-label="전체화면"></button>
         <a href="#" class="btn hide-sm" data-go="mypage"><span data-icon="user"></span>마이페이지</a>
         <a href="#" class="btn btn-primary" data-go="new"><span data-icon="plus"></span>새 곡</a>
       </div>
@@ -659,10 +662,31 @@
   </aside>
 
 <script>
+/* 스크립트 로더: app.js 든 app.js.txt 든 있는 이름으로 불러오고, 서버가 .txt 를 text/plain(+nosniff)으로 막아도 내용을 읽어서 직접 실행함 */
+(function () {
+  var V = '?v=20261119', list = [['fullscreen.js', 'fullscreen.js.txt']];
+  function run(t, src) { var s = document.createElement('script'); s.text = t + '\n//# sourceURL=' + src; document.body.appendChild(s); }
+  function one(names, ok, bad) {
+    if (!names.length) return bad();
+    var n = names[0], s = document.createElement('script');
+    s.src = n + V; s.onload = ok;
+    s.onerror = function () {
+      s.remove();
+      fetch(n + V).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (t) { run(t, n); ok(); })
+        .catch(function () { one(names.slice(1), ok, bad); });
+    };
+    document.body.appendChild(s);
+  }
+  function fail(n) { var d = document.createElement('div'); d.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;padding:12px 14px;border-radius:12px;background:#2a1212;color:#ffd7d7;border:1px solid #ff4d4d;font:600 13px system-ui,sans-serif'; d.textContent = '스크립트를 불러오지 못했어요: ' + n[0] + ' (또는 ' + n[1] + ') — 같은 폴더에 있는지 확인해 주세요'; document.body.appendChild(d); }
+  (function next(i) { if (i < list.length) one(list[i], function () { next(i + 1); }, function () { fail(list[i]); }); })(0);
+})();
+</script>
+<script>
 (() => {
 'use strict';
 // 에디터 파일 (같은 폴더)
-const APP = './humming-composer.html';
+const APP = './edit.html', MYPAGE = './mypage.html';
 
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -702,9 +726,10 @@ document.querySelectorAll('[data-logo]').forEach(box => {
 function go(kind, id) {
   stopAll();
   if (kind === 'new') location.href = APP + '?new=1';
-  else if (kind === 'mypage') location.href = APP + '#mypage';
+  else if (kind === 'mypage') location.href = MYPAGE;
   else if (kind === 'open') location.href = APP + '?open=' + encodeURIComponent(id);
 }
+{ const bindFs = () => TSFS.bind($('homeFs'), { notify: m => alert(m) }); if (window.TSFS) bindFs(); else window.addEventListener('tsl-fs-ready', bindFs); }   // 전체화면 (다른 페이지로 가도 첫 터치에 이어짐)
 document.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); go(a.dataset.go); }));
 
 // ───────── 오디오 (데모 · 건반 · 곡 미리듣기) ─────────
