@@ -3414,8 +3414,19 @@ function siRenameStep(i) {
 }
 // ── 스텝 관리 창: 그리드 · 맨 앞 「새 스텝 추가」 · 카드를 누르면 편집 · 끌어서 배치 · 정렬 ──
 const smOpen = () => $('stepMgr').classList.contains('show');
-function smOpenWin() { siStash(); $('stepMgr').classList.add('show'); smRender(); }
-function smClose() { const m = $('stepMgr'); if (!m.classList.contains('show')) return; m.classList.remove('show'); $('siTip').classList.remove('show'); }
+// pick = 스텝 입력을 처음 열 때: 새 스텝을 만들지, 기존 스텝을 이어서 만들지 먼저 고르기
+const SM_TXT = {
+  pick: ['새로 만들까요, 이어서 만들까요?', '「새 스텝 만들기」를 누르거나, 이어서 만들 스텝 카드를 눌러 주세요 · 닫으면 스텝 입력도 닫혀요'],
+  mgr: ['스텝 관리', '카드를 누르면 편집 · 끌어서 순서 바꾸기<span class="smTouch">(터치는 꾹 누른 뒤)</span> · 체크한 스텝은 이 순서대로 내보내져요'],
+};
+function smOpenWin(pick) {
+  siStash(); const m = $('stepMgr'), k = pick === true ? 'pick' : 'mgr';
+  m.classList.toggle('pick', k === 'pick');
+  $('smTitleT').textContent = SM_TXT[k][0]; $('smFoot').innerHTML = SM_TXT[k][1];
+  m.classList.add('show'); smRender();
+}
+function smClose() { const m = $('stepMgr'); if (!m.classList.contains('show')) return; m.classList.remove('show', 'pick'); $('siTip').classList.remove('show'); }
+function smCancel() { const pick = $('stepMgr').classList.contains('pick'); smClose(); if (pick) closeStepInput(); }   // 고르기 화면에서 닫기 = 스텝 입력도 닫기
 function smThumb(cv, st) {
   const W = cv.clientWidth || 200, H = cv.clientHeight || 64, dpr = window.devicePixelRatio || 1;
   cv.width = W * dpr; cv.height = H * dpr;
@@ -3431,20 +3442,28 @@ function smThumb(cv, st) {
 }
 function smRender() {
   const g = $('smGrid'); g.innerHTML = '';
-  const add = el('button', 'smc smAdd'); add.innerHTML = `<span class="smPlus">${svg('plus')}</span><b>새 스텝 추가</b>`;
+  const pick = $('stepMgr').classList.contains('pick');
+  const add = el('button', 'smc smAdd'); add.innerHTML = `<span class="smPlus">${svg('plus')}</span><b>${pick ? '새 스텝 만들기' : '새 스텝 추가'}</b>`;
   add.addEventListener('click', siAddStep); g.appendChild(add);
   SI.steps.forEach((st, i) => {
     const on = i === SI.cur, d = el('div', 'smc' + (on ? ' on' : '') + (st.ex ? ' ex' : '')); d.dataset.i = i;
     let end = 0; for (const n of st.notes) end = Math.max(end, n.s + n.l);
-    d.innerHTML = `<div class="smTop"><span class="smNo">${i + 1}</span>${on ? '<span class="smCur">편집 중</span>' : ''}<span style="flex:1"></span></div>
-      <canvas class="smTh"></canvas><div class="smNm"></div>
-      <div class="smInfo">${st.notes.length ? `노트 ${st.notes.length}개 · ${Math.ceil(end / 16) || 1}마디` : '비어 있음'}</div><div class="smActs"></div>`;
+    d.innerHTML = `<div class="smTop"><span class="smNo">${i + 1}</span>${on ? `<span class="smCur">${pick ? '최근 작업' : '편집 중'}</span>` : ''}<span style="flex:1"></span></div>
+      <div class="smThW"><canvas class="smTh"></canvas></div><div class="smNm"></div>
+      <div class="smInfo">${st.notes.length ? `노트 ${st.notes.length}개 · ${Math.ceil(end / 16) || 1}마디` : '비어 있음'}</div>${pick ? '<div class="smGo">이어서 만들기 ›</div>' : ''}<div class="smActs"></div>`;
     d.querySelector('.smNm').textContent = st.name;
     const top = d.querySelector('.smTop'), acts = d.querySelector('.smActs');
     const btn = (box, cls, icon, tip, fn) => { const b = el('button', 'smB ' + cls); b.innerHTML = svg(icon); b.dataset.tip = tip; b.addEventListener('click', e => { e.stopPropagation(); b.blur(); fn(); }); b.addEventListener('pointerdown', e => e.stopPropagation()); box.appendChild(b); return b; };
     btn(top, 'smCk', 'check', st.ex ? '내보내기에서 빼기' : '내보낼 스텝으로 체크 — 체크한 스텝들이 이 순서대로 이어져요', () => { st.ex = !st.ex; siRenderSteps(); siInfo(); siSaveSteps(); });
     const pl = SI.playing && SI.playIdx === i;
-    btn(acts, 'smPl' + (pl ? ' on' : ''), pl ? 'stop' : 'play', '미리 듣기', () => siPlayBoard(i));
+    if (pl) d.classList.add('playing');
+    if (st.notes.length) {   // 미리 듣기: 썸네일 위 큰 ▶ (카드를 고르지 않고 소리만 들어요)
+      const pb = el('button', 'smThPlay' + (pl ? ' on' : '')); pb.innerHTML = svg(pl ? 'stop' : 'play') + `<span>${pl ? '정지' : '미리 듣기'}</span>`;
+      pb.dataset.tip = '이 스텝 미리 듣기';
+      pb.addEventListener('click', e => { e.stopPropagation(); pb.blur(); siPlayBoard(i); });
+      pb.addEventListener('pointerdown', e => e.stopPropagation());
+      d.querySelector('.smThW').appendChild(pb);
+    }
     btn(acts, '', 'rename', '이름 바꾸기', () => siRenameStep(i));
     btn(acts, '', 'dup', '복제', () => siDupStep(i));
     btn(acts, 'danger', 'trash', '삭제', () => siDelStep(i));
@@ -3634,7 +3653,7 @@ function siNoteOn(code, p) {
   SI.relSnap = null;
   SI.held.set(code, p); SI.last = p;
   siSyncPending();
-  siPlayP(p); siShowNow(); siLights();
+  siPlayP(p); siShowNow(); siLights(); siDraw();   // 보드에도 누르고 있는 음 표시
 }
 // 누르고 있는 키가 있으면 그 키들, 없으면 마지막으로 누른 음 하나
 function siHeldPitches() { return [...new Set(SI.held.values())]; }
@@ -3645,11 +3664,11 @@ function siNoteOff(code) {
   SI.held.delete(code);
   if (!SI.held.size) {
     const snap = SI.relSnap, was = SI.consumed;
-    SI.relSnap = null; SI.consumed = false; siSyncPending(); siShowNow(); siLights();
+    SI.relSnap = null; SI.consumed = false; siSyncPending(); siShowNow(); siLights(); siDraw();
     if (SI.auto && !was && snap && snap.length) siCommitNotes(snap);
     return;
   }
-  siSyncPending(); siShowNow(); siLights();
+  siSyncPending(); siShowNow(); siLights(); siDraw();
 }
 function siPush() { const st0 = SI.steps[SI.cur]; if (st0) st0.mod = Date.now(); SI.undo.push(JSON.stringify({ n: SI.notes, c: SI.cursor })); if (SI.undo.length > 200) SI.undo.shift(); SI.redo = []; }
 function siRestore(j) { const d = JSON.parse(j); SI.notes = d.n; SI.cursor = d.c; SI.sel = new Set(); siRefresh(); }
@@ -3730,7 +3749,14 @@ function siDraw() {
   // 다음 입력 위치 + 대기 중인 음
   const cx = SI.cursor * SI_SW;
   c.fillStyle = 'rgba(242,194,48,.10)'; c.fillRect(cx, 0, SI.len * SI_SW, H);
-  for (const p of SI.pending) { if (p < lo || p > hi) continue; c.strokeStyle = '#f2c230'; c.setLineDash([3, 3]); c.lineWidth = 1; c.strokeRect(cx + 1.5, (hi - p) * rowH + 1.5, SI.len * SI_SW - 3, Math.max(3, rowH - 3)); c.setLineDash([]); }
+  for (const p of SI.pending) {
+    if (p < lo || p > hi) continue;
+    const y = (hi - p) * rowH, h = Math.max(4, rowH - 1), w = Math.max(SI.len * SI_SW - 2, 10);
+    c.fillStyle = 'rgba(242,194,48,.12)'; c.fillRect(0, y, W, rowH);   // 그 음 줄 전체를 옅게
+    c.fillStyle = 'rgba(242,194,48,.55)'; rr(c, cx + 1, y + .5, w, h, 3); c.fill();
+    c.strokeStyle = '#ffe48a'; c.lineWidth = 1.5; rr(c, cx + 1, y + .5, w, h, 3); c.stroke();
+    c.fillStyle = '#ffe48a'; c.font = `bold ${clamp(rowH - 1, 9, 12)}px system-ui`; c.fillText(siPName(p), cx + w + 5, y + h / 2 + 4);   // 오른쪽에 음 이름
+  }
   c.fillStyle = '#f2c230'; c.fillRect(cx - 1, 0, 2, H);
   if (SI.playing && SI.playHead != null) { c.fillStyle = '#fff'; c.fillRect(SI.playHead * SI_SW, 0, 1.5, H); }
 }
@@ -3749,8 +3775,9 @@ function siBoardXY(e) { const r = $('siBoard').getBoundingClientRect(); return [
 $('siBoard').addEventListener('pointerdown', e => {
   if (e.button === 2) return;
   const [x, y] = siBoardXY(e), touch = e.pointerType === 'touch', n = siHit(x, y, touch);
-  if (!n && touch) {   // 터치: 빈 곳은 밀면 스크롤 · 톡 치면 입력 위치 이동
-    SI.pan = { id: e.pointerId, cx: e.clientX, sl: $('siBoardWrap').scrollLeft, x, moved: false };
+  if (touch) {   // 터치(모바일): 빈 칸 톡 = 칠하기(노트) · 칠한 노트 톡 = 지우기 · 빈 곳을 밀면 스크롤 · 노트를 끌면 옮기기
+    if (SI.pan) return;   // 이미 다른 손가락이 보드를 잡고 있음
+    SI.pan = { id: e.pointerId, cx: e.clientX, cy: e.clientY, sl: $('siBoardWrap').scrollLeft, x, y, moved: false, n: siHit(x, y) };
     $('siBoard').setPointerCapture(e.pointerId); return;
   }
   if (!n) { SI.sel = new Set(); SI.cursor = Math.max(0, Math.floor(x / SI_SW / S.grid) * S.grid); siRefresh(); return; }
@@ -3762,10 +3789,16 @@ $('siBoard').addEventListener('pointerdown', e => {
 });
 $('siBoard').addEventListener('pointermove', e => {
   if (SI.pan && SI.pan.id === e.pointerId) {
-    const dx = e.clientX - SI.pan.cx;
-    if (Math.abs(dx) > 6) SI.pan.moved = true;
-    if (SI.pan.moved) $('siBoardWrap').scrollLeft = SI.pan.sl - dx;
-    return;
+    const pn = SI.pan, dx = e.clientX - pn.cx, dy = e.clientY - pn.cy;
+    if (!pn.moved && Math.hypot(dx, dy) > 8) {
+      pn.moved = true;
+      if (pn.n) {   // 노트를 잡고 끌기 → 옮기기
+        SI.pan = null; SI.sel = new Set([pn.n]); siPlayP(pn.n.p);
+        SI.drag = { x0: pn.x, y0: pn.y, orig: new Map([[pn.n, { s: pn.n.s, p: pn.n.p }]]), pushed: false, dp: 0 };
+      }
+    }
+    if (SI.pan && SI.pan.moved) { $('siBoardWrap').scrollLeft = SI.pan.sl - dx; return; }
+    if (SI.pan) return;
   }
   const [x, y] = siBoardXY(e);
   if (!SI.drag) { $('siBoard').style.cursor = siHit(x, y) ? 'grab' : 'crosshair'; return; }
@@ -3779,8 +3812,21 @@ $('siBoard').addEventListener('pointermove', e => {
   if (dp !== d.dp) { d.dp = dp; siPlayP([...d.orig.keys()][0].p); }
   $('siBoard').style.cursor = 'grabbing'; siDraw();
 });
-const siDragEnd = () => {
-  if (SI.pan) { const pn = SI.pan; SI.pan = null; if (!pn.moved) { SI.sel = new Set(); SI.cursor = Math.max(0, Math.floor(pn.x / SI_SW / S.grid) * S.grid); siRefresh(); } return; }
+// 모바일 톡: 빈 칸이면 그 줄(음) · 그 칸에 지금 음 길이만큼 노트를 칠하고, 칠한 노트면 지워요
+function siTapToggle(x, y, n) {
+  if (n && SI.notes.includes(n)) { siPush(); SI.notes = SI.notes.filter(m => m !== n); SI.sel = new Set(); siRefresh(); return; }
+  const g = SI.geo; if (!g) return;
+  const p = g.hi - Math.floor(y / g.rowH); if (p < LOW || p > HIGH || p < g.lo) return;
+  const s = Math.max(0, Math.floor(x / SI_SW / S.grid) * S.grid);
+  siPush(); SI.notes.push({ p, s, l: SI.len }); SI.sel = new Set();
+  SI.cursor = s + SI.len;   // 다음 입력 위치는 칠한 노트 바로 뒤
+  siPlayP(p); siRefresh();
+}
+const siDragEnd = e => {
+  if (SI.pan) {
+    if (e && e.pointerId !== SI.pan.id) return;   // 다른 손가락
+    const pn = SI.pan; SI.pan = null; if (!pn.moved && e && e.type === 'pointerup') siTapToggle(pn.x, pn.y, pn.n); return;
+  }
   if (SI.drag) { SI.drag = null; siRefresh(); }
 };
 $('siBoard').addEventListener('pointerup', siDragEnd);
@@ -3865,6 +3911,7 @@ function openStepInput() {
   stepM.classList.add('show');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   siApplyAutoClass(); siBuildLens(); siBuildPiano(); siRenderSteps(); siRefresh();
+  siStash(); if (SI.steps.length > 1 || SI.steps.some(st => st.notes.length)) smOpenWin(true);
 }
 function closeStepInput() { smClose(); siStopPlay(); if (SI.remap) siSetRemap(false); SI.held.clear(); stepM.classList.remove('show'); $('siKbPop').classList.remove('show'); $('siKbBtn').classList.remove('on'); $('siHelpPop').classList.remove('show'); $('siTip').classList.remove('show'); }
 function siExport(at0, bundle) {   // bundle: 스텝 하나 = 한 묶음 (편집 화면에서 통째로 선택)
@@ -3924,9 +3971,10 @@ $('siClose').onclick = closeStepInput;
 $('siCancel').onclick = closeStepInput;
 $('siExport').onclick = () => siMobile() ? siStartPlace(false) : siExport(null, false);
 $('siExportB').onclick = () => siMobile() ? siStartPlace(true) : siExport(null, true);
-$('siCurStep').onclick = smOpenWin;
-$('smClose').onclick = smClose;
-$('stepMgr').addEventListener('pointerdown', e => { if (e.target.id === 'stepMgr') smClose(); });
+$('siCurStep').onclick = () => smOpenWin();
+$('smClose').onclick = smCancel;
+$('stepMgr').addEventListener('pointerdown', e => { if (e.target.id === 'stepMgr') smCancel(); });
+$('siCurName').onclick = () => smOpenWin();
 document.querySelectorAll('#smSort [data-sort]').forEach(b => b.onclick = () => smSort(b.dataset.sort));
 $('siSpread').onclick = () => siShiftGaps(1);
 $('siTight').onclick = () => siShiftGaps(-1);
@@ -3934,6 +3982,16 @@ $('siTight').onclick = () => siShiftGaps(-1);
 {
   const g = $('siOctGrp'), home = { p: g.parentNode, n: g.nextSibling };
   const place = () => { if (siMobile()) $('siWhere').closest('label').before(g); else if (g.parentNode !== home.p) home.p.insertBefore(g, home.n); };
+  place(); window.addEventListener('resize', place);
+}
+// 모바일: 스텝 관련(지금 스텝 · 붙이기/띄우기 · 삭제 · 되돌리기 · 비우기 · 재생)을 위 헤더로 올려서 보드를 넓게
+{
+  const bar = stepM.querySelector('.siStepBar'), tools = stepM.querySelector('.siBoardHead'), top = stepM.querySelector('.siBoardTop');
+  const head = stepM.querySelector('.mhead'), title = head.querySelector('.siTitle');
+  const place = () => {
+    if (siMobile()) { if (bar.parentNode !== head) { title.after(bar); $('siClose').before(tools); } }
+    else if (bar.parentNode !== top) top.append(bar, tools);
+  };
   place(); window.addEventListener('resize', place);
 }
 // 모바일 내보내기: 창을 잠깐 숨기고 재생 위치(▼)를 옮겨 넣을 곳을 고름
@@ -4038,7 +4096,7 @@ window.addEventListener('keydown', e => {
       else if (e.key === 'Escape') { e.preventDefault(); e.target.dataset.cancel = '1'; e.target.blur(); }
       return;
     }
-    if (e.key === 'Escape') { e.preventDefault(); smClose(); }
+    if (e.key === 'Escape') { e.preventDefault(); smCancel(); }
     return;
   }
   if (/^F\d+$/.test(e.code) && e.code !== 'F1') return;   // F5·F11·F12 같은 브라우저 키는 그대로
@@ -5676,8 +5734,8 @@ drawAll();
     { target: '#ebFab', title: '편집 메뉴', body: '<b>편집</b>을 누르면 복사 · 잘라내기 · 붙여넣기(재생 위치에) · 복제 · 삭제 · 전체선택 · <b>묶기 · 묶음 풀기</b> 버튼 줄이 열려요.' },
     { target: '#ebFab', title: '이어 부르기 (한 음처럼 잇기)', body: '노트를 여러 개 선택하고 「편집 → <b>이어 부르기</b>」를 누르면 음마다 새로 치지 않고 <b>한 음처럼 미끄러지듯</b> 이어져요. 한 번 더 누르면 풀려요.' },
     { target: '#transport', title: '재생 · 녹음', body: '▶ 재생, ● 녹음. 녹음이 끝나면 <b>노트 변환 미리보기</b>에서 결과를 들어 보고 <b>적용</b>을 눌러요. 위쪽 <b>눈금자</b>를 누르거나 끌면 재생 위치(▼)가 옮겨져요.' },
-    { target: '#moreBtn', title: '더보기 → 스텝 입력', body: '「더보기 → 만들기 → <b>스텝 입력</b>」을 열면 화면 아래 <b>터치 건반</b>이 나와요. 여러 손가락 = 화음, 손을 떼면 바로 보드에 들어가요(「바로 입력」). ◀ ▶ 로 입력 위치를 옮겨요.' },
-    { art: 'steps', title: '스텝 여러 개 관리하기', body: '보드 위 <b>← 스텝 목록</b>을 누르면 <b>스텝 관리 창</b>(그리드)이 열려요.<ul><li>맨 앞 <b>「새 스텝 추가」</b> 카드로 추가</li><li>카드를 톡 = 그 스텝 편집 · <b>꾹 누른 뒤 끌기</b> = 순서 바꾸기</li><li>카드 아래 버튼: ▶ 미리 듣기 · 이름 · 복제 · 삭제</li><li><b>체크</b>한 스텝들이 그 순서대로 내보내져요</li></ul>' },
+    { target: '#moreBtn', title: '더보기 → 스텝 입력', body: '「더보기 → 만들기 → <b>스텝 입력</b>」을 열면 화면 아래 <b>터치 건반</b>이 나와요. 여러 손가락 = 화음, 손을 떼면 바로 보드에 들어가요(「바로 입력」). ◀ ▶ 로 입력 위치를 옮겨요.<br>보드의 <b>빈 칸을 톡</b> = 노트 칠하기 · <b>칠한 노트를 다시 톡</b> = 지우기 · 노트를 끌면 옮기기' },
+    { art: 'steps', title: '스텝 여러 개 관리하기', body: '스텝 입력을 열면 먼저 <b>새로 만들지, 이어서 만들지</b> 고르는 창이 떠요. 입력 중에는 위쪽 <b>스텝 이름 버튼</b>을 누르면 <b>스텝 관리 창</b>(그리드)이 열려요.<ul><li>맨 앞 <b>「새 스텝 추가」</b> 카드로 추가</li><li>카드를 톡 = 그 스텝 편집 · <b>꾹 누른 뒤 끌기</b> = 순서 바꾸기</li><li>카드 아래 버튼: ▶ 미리 듣기 · 이름 · 복제 · 삭제</li><li><b>체크</b>한 스텝들이 그 순서대로 내보내져요</li></ul>' },
     { art: 'bundle', artArg: true, title: '따로 · 묶음으로 내보내기', body: '아래 <b>따로</b> / <b>묶음</b> 버튼을 누르면 편집 화면이 보이고, <b>눈금자를 끌어 ▼ 위치를 고른 뒤 「여기에 넣기」</b>.<ul><li><b>따로</b> = 낱개 노트로</li><li><b>묶음</b> = 점선 상자 한 덩어리로. 아무 노트나 <b>톡 → 통째로 선택</b>되고, 편집 메뉴의 복사 · 잘라내기 · 붙여넣기 · 삭제가 한 번에 돼요.</li></ul>' },
     { target: '#moreBtn', title: '다 됐어요!', body: '「더보기 → 파일 · 기타 → <b>튜토리얼</b>」에서 언제든 다시 볼 수 있어요. 즐겁게 만들어 보세요 🎵' }
   ];

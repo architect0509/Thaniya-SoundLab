@@ -243,7 +243,7 @@
 </div>
 <div id="accModal"><div class="acard">
   <div class="mhead">
-    <div class="atabs"><button class="atab on" data-tab="rec"><span data-icon="sparkle"></span>추천 반주</button><button class="atab" data-tab="sample"><span data-icon="music"></span>샘플 반주</button><button class="atab" data-tab="beat"><span data-icon="drum"></span>비트</button></div>
+    <div class="atabs"><button class="atab on" data-tab="rec" title="추천 반주"><span data-icon="sparkle"></span>추천 반주</button><button class="atab" data-tab="sample" title="샘플 반주"><span data-icon="music"></span>샘플 반주</button><button class="atab" data-tab="beat" title="비트"><span data-icon="drum"></span>비트</button></div>
     <span class="spacer" style="flex:1"></span>
     <button class="ib" id="accClose" data-icon="x" title="닫기 (Esc)"></button>
   </div>
@@ -258,12 +258,12 @@
     <div class="arow" id="paneSample" style="display:none">
       <label class="af">조<select id="accSKey"></select></label>
       <label class="af">코드 진행<select id="accProg"></select></label>
-      <label class="af">길이<select id="accBars"><option>4</option><option selected>8</option><option>16</option><option>32</option></select>마디</label>
+      <label class="af">길이<span class="afIn"><select id="accBars"><option>4</option><option selected>8</option><option>16</option><option>32</option></select><span class="afU">마디</span></span></label>
       <span style="flex:1"></span><span class="akey" id="accStartInfo"></span>
     </div>
     <div class="arow" id="paneBeat" style="display:none">
       <label class="af">시작<select id="btStart"><option value="play">재생 위치부터</option><option value="song">곡 처음부터</option><option value="notes">곡 전체 길이에 맞춰</option></select></label>
-      <label class="af">길이<select id="btBars"><option>2</option><option>4</option><option selected>8</option><option>16</option><option>32</option></select>마디</label>
+      <label class="af">길이<span class="afIn"><select id="btBars"><option>2</option><option>4</option><option selected>8</option><option>16</option><option>32</option></select><span class="afU">마디</span></span></label>
       <label class="af">필인<select id="btFill"><option value="0">없음</option><option value="4" selected>4마디마다</option><option value="8">8마디마다</option></select></label>
       <label class="chk"><input type="checkbox" id="btCrash" checked>첫 박 크래시</label>
       <span style="flex:1"></span><span class="akey" id="btInfo"></span>
@@ -298,7 +298,7 @@
     </div>
   </div>
   <div class="mfoot">
-    <button class="btn" id="accPlay"><span data-icon="play"></span>미리 듣기</button>
+    <button class="btn" id="accPlay" title="미리 듣기"><span data-icon="play"></span>미리 듣기</button>
     <button class="btn" id="accStop"><span data-icon="stop"></span></button>
     <span class="mhint" id="accSum" style="margin-left:6px"></span>
     <span style="flex:1"></span>
@@ -336,7 +336,7 @@
     <div class="siBoardBox">
       <div class="siBoardTop">
         <div class="siStepBar">
-          <button class="siBackList" id="siCurStep" data-tip="스텝 목록으로 돌아가기"><span data-icon="back"></span><span>스텝 목록</span></button>
+          <button class="siBackList" id="siCurStep" data-tip="스텝 목록 — 새 스텝 만들기 · 다른 스텝 고르기"><span data-icon="back"></span><span>스텝 목록</span></button>
           <b class="siCurName" id="siCurName"></b><span class="siCurInfo" id="siCurInfo"></span>
         </div>
         <div class="siBoardHead">
@@ -381,13 +381,13 @@
 </div></div>
 <div id="stepMgr"><div class="smCard">
   <div class="smHead">
-    <div class="smTitle"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>스텝 관리<span id="smCount"></span></div>
+    <div class="smTitle"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span id="smTitleT">스텝 관리</span><span id="smCount"></span></div>
     <span style="flex:1"></span>
     <div class="smSort" id="smSort"><span class="siCap">정렬</span><button class="btn sm" data-sort="name" data-tip="이름순으로 정렬">이름</button><button class="btn sm" data-sort="notes" data-tip="노트가 많은 순으로 정렬">노트 수</button><button class="btn sm" data-sort="mod" data-tip="최근에 고친 순으로 정렬">최근 수정</button></div>
     <button class="ib siHb" id="smClose" data-icon="x" data-tip="닫기" data-key="Esc"></button>
   </div>
   <div class="smGrid" id="smGrid"></div>
-  <div class="smFoot">카드를 누르면 편집 · 끌어서 순서 바꾸기<span class="smTouch">(터치는 꾹 누른 뒤)</span> · 체크한 스텝은 이 순서대로 내보내져요</div>
+  <div class="smFoot" id="smFoot">카드를 누르면 편집 · 끌어서 순서 바꾸기<span class="smTouch">(터치는 꾹 누른 뒤)</span> · 체크한 스텝은 이 순서대로 내보내져요</div>
 </div></div>
 <div id="siTip"></div>
 <div id="placeBar"><button class="btn" id="plCancel" title="취소"><span data-icon="x"></span></button><div class="plTx"><b>넣을 위치</b><span id="plPos"></span><small>위 눈금자를 누르거나 끌어서 ▼를 옮기세요</small></div><button class="btn" id="plStart" title="곡 처음으로"><span data-icon="home"></span></button><button class="btn primary" id="plOk"><span data-icon="download"></span>여기에 넣기</button></div>
@@ -411,7 +411,7 @@
     <tr><td><kbd>Ctrl</kbd>+Z / Shift+Z</td><td>되돌리기 / 다시 실행</td></tr>
     <tr><td><kbd>Space</kbd> 짧게 · <kbd>Shift</kbd>+<kbd>R</kbd> · <kbd>Esc</kbd></td><td>재생·정지 · 녹음 · 정지(선택 해제)</td></tr>
     <tr><td>반주 · 비트 <kbd>J</kbd></td><td>추천: 멜로디의 조·코드를 분석해 스타일별 반주 생성 · 샘플: 조와 코드 진행을 골라 반주 깔기 · 비트: 장르 비트 프리셋 + 16칸 스텝 편집(기본/필인), 스윙·사람 느낌 · 마디 줄은 편집 화면과 같이 스크롤</td></tr>
-    <tr><td>스텝 입력 <kbd>K</kbd></td><td>컴퓨터 키보드로 건반 연주 · <kbd>Z</kbd>~<kbd>M</kbd> = 도~시, <kbd>Q</kbd>~<kbd>]</kbd> = 한 옥타브 위 도~그 위 솔, 그 사이 윗줄 키 = 검은건반 · <kbd>-</kbd>/<kbd>+</kbd> 옥타브 · 건반을 누른 채 <kbd>Space</kbd> 보드에 넣기 · 아무 건반도 안 누르고 <kbd>Space</kbd> = 한 칸 앞으로(쉼표) · <kbd>Enter</kbd> 보드 전체 재생/정지 · <kbd>←</kbd><kbd>→</kbd> 입력 위치를 음 길이만큼 이동 · <kbd>;</kbd>/<kbd>'</kbd> 음 길이 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 따로 내보내기 · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> 묶음으로 내보내기 · <b>스텝</b>: 보드를 여러 개 만들어 이름 짓기 · ▶ 미리 듣기 · 체크한 스텝을 차례로 내보내기 · <kbd>Ctrl</kbd>+<kbd>[</kbd>/<kbd>]</kbd> 모두 한 칸 붙이기/띄우기 · 창이 열린 동안 다른 단축키는 꺼져요 · 연주 키는 '연주 키 설정'에서 바꿀 수 있어요 · <b>모바일</b>: 아래 건반을 터치해서 연주(여러 손가락 = 화음) · 손을 떼면 보드에 들어가요('바로 입력') · 임시 보드는 빈 곳을 밀면 스크롤, 톡 치면 입력 위치 이동</td></tr>
+    <tr><td>스텝 입력 <kbd>K</kbd></td><td>컴퓨터 키보드로 건반 연주 · <kbd>Z</kbd>~<kbd>M</kbd> = 도~시, <kbd>Q</kbd>~<kbd>]</kbd> = 한 옥타브 위 도~그 위 솔, 그 사이 윗줄 키 = 검은건반 · <kbd>-</kbd>/<kbd>+</kbd> 옥타브 · 건반을 누른 채 <kbd>Space</kbd> 보드에 넣기 · 아무 건반도 안 누르고 <kbd>Space</kbd> = 한 칸 앞으로(쉼표) · <kbd>Enter</kbd> 보드 전체 재생/정지 · <kbd>←</kbd><kbd>→</kbd> 입력 위치를 음 길이만큼 이동 · <kbd>;</kbd>/<kbd>'</kbd> 음 길이 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 따로 내보내기 · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> 묶음으로 내보내기 · <b>스텝</b>: 보드를 여러 개 만들어 이름 짓기 · ▶ 미리 듣기 · 체크한 스텝을 차례로 내보내기 · <kbd>Ctrl</kbd>+<kbd>[</kbd>/<kbd>]</kbd> 모두 한 칸 붙이기/띄우기 · 창이 열린 동안 다른 단축키는 꺼져요 · 연주 키는 '연주 키 설정'에서 바꿀 수 있어요 · <b>모바일</b>: 아래 건반을 터치해서 연주(여러 손가락 = 화음) · 손을 떼면 보드에 들어가요('바로 입력') · 임시 보드: 빈 칸을 톡 = 노트 칠하기 · 칠한 노트를 다시 톡 = 지우기 · 노트를 끌면 옮기기 · 빈 곳을 밀면 스크롤 · 입력 위치는 ◀ ▶</td></tr>
     <tr><td>마이페이지</td><td>왼쪽 위 로고 아이콘 또는 <kbd>Ctrl</kbd>+O · 곡 목록, 새 곡, 이름 바꾸기, 복제, 삭제, 프로젝트(.json)/MIDI 불러오기·내보내기 · 곡의 '편집'을 누르면 에디터로</td></tr>
     <tr><td>트랙 목록</td><td>클릭: 선택 · 끌기: 순서 변경 · 우클릭: 메뉴 · 연필 버튼: 트랙 설정 · Ctrl/Shift+클릭: 여러 트랙 선택 · Ctrl+G: 폴더로 묶기</td></tr>
   </table>
