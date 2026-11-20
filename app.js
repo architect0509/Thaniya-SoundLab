@@ -3321,7 +3321,8 @@ const SI = {
   map: Object.assign({}, SI_DEF_MAP), octDn: 'Minus', octUp: 'Equal', oct: 4, len: 2, auto: false,
   notes: [], cursor: 0, pending: [], held: new Map(), sel: new Set(), undo: [], redo: [],
   remap: false, wait: null, drag: null, pan: null, span: 0, geo: null, playT: null, playing: false,
-  steps: [], cur: 0, playIdx: -1, exBundle: false
+  steps: [], cur: 0, playIdx: -1, exBundle: false,
+  metro: false, selTool: false, box: null, padOpen: false
 };
 (() => {
   const o = lsGet(SI_KEY);
@@ -3332,6 +3333,7 @@ const SI = {
     if (Number.isInteger(o.oct)) SI.oct = clamp(o.oct, 0, 6);
     if (SI_LENS.some(l => l[0] === o.len)) SI.len = o.len;
     SI.auto = !!o.auto;
+    SI.metro = !!o.metro;
   }
   if (!(o && typeof o === 'object' && 'auto' in o) && siMobile()) SI.auto = true;   // 모바일 첫 사용: 건반에서 손을 떼면 바로 입력
 })();
@@ -3547,7 +3549,7 @@ function siShiftGaps(dir) {
   const gl = (SI_LENS.find(l => l[0] === G) || [0, G + '/16'])[1];
   siRefresh(); toast(`음 사이를 한 칸(${gl})씩 ${dir > 0 ? '띄웠어요' : '붙였어요'} (Ctrl+Z로 되돌리기)`);
 }
-const siSaveCfg = () => lsSet(SI_KEY, { map: SI.map, octDn: SI.octDn, octUp: SI.octUp, oct: SI.oct, len: SI.len, auto: SI.auto });
+const siSaveCfg = () => lsSet(SI_KEY, { map: SI.map, octDn: SI.octDn, octUp: SI.octUp, oct: SI.oct, len: SI.len, auto: SI.auto, metro: SI.metro });
 const siBase = () => 12 * (SI.oct + 1);
 const siTrack = () => trk(+$('siTrack').value) || activeTrack();
 const siIsBlack = p => [1, 3, 6, 8, 10].includes(((p % 12) + 12) % 12);
@@ -3759,6 +3761,45 @@ function siDraw() {
   }
   c.fillStyle = '#f2c230'; c.fillRect(cx - 1, 0, 2, H);
   if (SI.playing && SI.playHead != null) { c.fillStyle = '#fff'; c.fillRect(SI.playHead * SI_SW, 0, 1.5, H); }
+  if (SI.box && SI.box.on) {   // 선택 도구: 끌어서 그리는 사각형
+    const b = SI.box, x = Math.min(b.x0, b.x1), y = Math.min(b.y0, b.y1), w = Math.abs(b.x1 - b.x0), h = Math.abs(b.y1 - b.y0);
+    c.fillStyle = 'rgba(242,194,48,.12)'; c.fillRect(x, y, w, h);
+    c.strokeStyle = '#f2c230'; c.lineWidth = 1; c.setLineDash([4, 3]); c.strokeRect(x + .5, y + .5, w, h); c.setLineDash([]);
+  }
+  siPadPos();
+}
+// ── 모바일: 선택한 노트 위에 뜨는 '옮기기' 버튼 → 누르면 ◀ ▲ ▼ ▶ 컨트롤러가 펼쳐져서 한 칸씩 옮겨요 ──
+function siPadPos() {
+  const pad = $('siSelPad'); if (!pad) return;
+  const g = SI.geo, show = siMobile() && SI.sel.size > 0 && !SI.drag && !(SI.box && SI.box.on) && g;
+  if (!show) { pad.classList.remove('show', 'open'); pad.dataset.fixed = ''; if (!SI.sel.size) SI.padOpen = false; return; }
+  pad.classList.add('show'); pad.classList.toggle('open', SI.padOpen);
+  if (!SI.padOpen) pad.dataset.fixed = '';
+  else if (pad.dataset.fixed) return;   // 펼친 동안은 자리를 고정 — 누르는 손가락 아래에서 버튼이 도망가지 않게
+  else pad.dataset.fixed = '1';
+  const arr = [...SI.sel], box = pad.parentNode.getBoundingClientRect(), cr = $('siBoard').getBoundingClientRect(), wr = $('siBoardWrap').getBoundingClientRect();
+  const s0 = Math.min(...arr.map(n => n.s)), s1 = Math.max(...arr.map(n => n.s + n.l)), p0 = Math.min(...arr.map(n => n.p)), p1 = Math.max(...arr.map(n => n.p));
+  const ox = cr.left - box.left, oy = cr.top - box.top;
+  const L = ox + s0 * SI_SW, R = ox + s1 * SI_SW, T = oy + (g.hi - p1) * g.rowH, B = oy + (g.hi - p0 + 1) * g.rowH;
+  const pw = pad.offsetWidth, ph = pad.offsetHeight, minX = wr.left - box.left + 4, maxX = wr.right - box.left - pw - 4, minY = wr.top - box.top + 4, maxY = wr.bottom - box.top - ph - 4;
+  // 선택 영역을 가리지 않는 자리: 위 → 아래 → 오른쪽 → 왼쪽 (다 안 되면 위쪽에 겹쳐서)
+  const cx = (L + R) / 2 - pw / 2, cy = (T + B) / 2 - ph / 2;
+  const spots = [[cx, T - ph - 6, 'y'], [cx, B + 6, 'y'], [R + 6, cy, 'x'], [L - pw - 6, cy, 'x']];
+  const fit = spots.find(([x, y, k]) => k === 'y' ? y >= minY && y <= maxY : x >= minX && x <= maxX) || [cx, minY];
+  pad.style.left = clamp(fit[0], minX, Math.max(minX, maxX)) + 'px'; pad.style.top = clamp(fit[1], minY, Math.max(minY, maxY)) + 'px';
+}
+function siSelVisible() {   // 옮긴 노트가 화면 밖으로 나가면 보드를 따라 스크롤
+  if (!SI.sel.size) return;
+  const w = $('siBoardWrap'), arr = [...SI.sel], x0 = Math.min(...arr.map(n => n.s)) * SI_SW, x1 = Math.max(...arr.map(n => n.s + n.l)) * SI_SW;
+  if (x0 < w.scrollLeft + 10) w.scrollLeft = Math.max(0, x0 - 40);
+  else if (x1 > w.scrollLeft + w.clientWidth - 10) w.scrollLeft = x1 - w.clientWidth + 40;
+}
+function siSetSelTool(on) {
+  SI.selTool = !!on; $('siSelTool').classList.toggle('on', SI.selTool); stepM.classList.toggle('siSelOn', SI.selTool);
+  SI.box = null; SI.padOpen = false;
+  if (!SI.selTool && SI.sel.size) SI.sel = new Set();
+  siDraw();
+  toast(SI.selTool ? '선택 도구 — 노트를 톡 눌러 고르고, 빈 곳을 끌면 여러 개를 골라요' : '선택 도구를 껐어요 — 톡 = 칠하기 · 지우기');
 }
 function siScrollTo(s) {
   const w = $('siBoardWrap'), x = s * SI_SW;
@@ -3775,6 +3816,11 @@ function siBoardXY(e) { const r = $('siBoard').getBoundingClientRect(); return [
 $('siBoard').addEventListener('pointerdown', e => {
   if (e.button === 2) return;
   const [x, y] = siBoardXY(e), touch = e.pointerType === 'touch', n = siHit(x, y, touch);
+  if (SI.selTool && siMobile()) {   // 선택 도구: 노트 톡 = 고르기/빼기 · 빈 곳 끌기 = 사각형으로 여러 개 · 고른 노트 끌기 = 옮기기
+    if (SI.box || SI.drag) return;   // 이미 다른 손가락이 쓰는 중
+    SI.box = { id: e.pointerId, x0: x, y0: y, x1: x, y1: y, cx: e.clientX, cy: e.clientY, n, on: false, moved: false, base: new Set(SI.sel) };
+    $('siBoard').setPointerCapture(e.pointerId); return;
+  }
   if (touch) {   // 터치(모바일): 빈 칸 톡 = 칠하기(노트) · 칠한 노트 톡 = 지우기 · 빈 곳을 밀면 스크롤 · 노트를 끌면 옮기기
     if (SI.pan) return;   // 이미 다른 손가락이 보드를 잡고 있음
     SI.pan = { id: e.pointerId, cx: e.clientX, cy: e.clientY, sl: $('siBoardWrap').scrollLeft, x, y, moved: false, n: siHit(x, y) };
@@ -3788,6 +3834,27 @@ $('siBoard').addEventListener('pointerdown', e => {
   $('siBoard').setPointerCapture(e.pointerId); siRefresh();
 });
 $('siBoard').addEventListener('pointermove', e => {
+  if (SI.box && SI.box.id === e.pointerId && !SI.drag) {
+    const b = SI.box, [x, y] = siBoardXY(e);
+    if (!b.moved && Math.hypot(e.clientX - b.cx, e.clientY - b.cy) > 8) {
+      b.moved = true;
+      if (b.n) {   // 노트를 잡고 끌기 → (고른 노트들) 옮기기
+        if (!SI.sel.has(b.n)) SI.sel = new Set([b.n]);
+        siPlayP(b.n.p); SI.box = null;
+        SI.drag = { x0: b.x0, y0: b.y0, orig: new Map([...SI.sel].map(m => [m, { s: m.s, p: m.p }])), pushed: false, dp: 0 };
+      } else b.on = true;
+    }
+    if (SI.box && SI.box.on) {
+      b.x1 = x; b.y1 = y;
+      const w = $('siBoardWrap'), wr = w.getBoundingClientRect();   // 끝에 닿으면 보드를 밀어줘요
+      if (e.clientX > wr.right - 28) w.scrollLeft += 10; else if (e.clientX < wr.left + 28) w.scrollLeft -= 10;
+      const g = SI.geo, sA = Math.min(b.x0, b.x1) / SI_SW, sB = Math.max(b.x0, b.x1) / SI_SW;
+      const pA = g.hi - Math.floor(Math.max(b.y0, b.y1) / g.rowH), pB = g.hi - Math.floor(Math.min(b.y0, b.y1) / g.rowH);
+      SI.sel = new Set(SI.notes.filter(n => n.p >= pA && n.p <= pB && n.s + n.l > sA && n.s < sB));
+      siDraw(); return;
+    }
+    if (SI.box) return;
+  }
   if (SI.pan && SI.pan.id === e.pointerId) {
     const pn = SI.pan, dx = e.clientX - pn.cx, dy = e.clientY - pn.cy;
     if (!pn.moved && Math.hypot(dx, dy) > 8) {
@@ -3823,6 +3890,15 @@ function siTapToggle(x, y, n) {
   siPlayP(p); siRefresh();
 }
 const siDragEnd = e => {
+  if (SI.box) {
+    if (e && e.pointerId !== SI.box.id) return;
+    const b = SI.box; SI.box = null;
+    if (!b.moved && e && e.type === 'pointerup') {   // 톡: 노트면 고르기/빼기, 빈 곳이면 선택 풀기
+      if (b.n) { SI.sel.has(b.n) ? SI.sel.delete(b.n) : (SI.sel.add(b.n), siPlayP(b.n.p)); }
+      else SI.sel = new Set();
+    }
+    siRefresh(); return;
+  }
   if (SI.pan) {
     if (e && e.pointerId !== SI.pan.id) return;   // 다른 손가락
     const pn = SI.pan; SI.pan = null; if (!pn.moved && e && e.type === 'pointerup') siTapToggle(pn.x, pn.y, pn.n); return;
@@ -3887,8 +3963,10 @@ function siPlayBoard(idx) {   // idx = 미리 들을 스텝 (없으면 지금 �
   const t = siTrack(), ss = stepSec(), t0 = ac.currentTime + 0.06;
   let end = 0; for (const n of notes) { tone(n.p, t0 + n.s * ss, n.l * ss, t, 1, n); end = Math.max(end, n.s + n.l); }
   SI.playing = true; SI.playIdx = idx; siInfo(); siRenderSteps();
+  let mNext = 0; const mEnd = Math.ceil(end / 4) * 4;   // 메트로놈: 4분음표마다 (마디 첫 박은 높은 소리)
   const tick = () => {
     if (!SI.playing) return;
+    while (mNext < mEnd && t0 + mNext * ss < ac.currentTime + 0.15) { const t = t0 + mNext * ss; if (SI.metro && t >= ac.currentTime - 0.01) click(t, mNext % 16 === 0); mNext += 4; }
     const ph = (ac.currentTime - t0) / ss;
     SI.playHead = SI.playIdx === SI.cur ? ph : null;
     if (ph > end + 2) { SI.playing = false; SI.playIdx = -1; SI.playHead = null; siInfo(); siDraw(); siRenderSteps(); return; }
@@ -3910,10 +3988,11 @@ function openStepInput() {
   SI.held.clear(); SI.pending = []; SI.last = null; SI.relSnap = null; SI.consumed = false;
   stepM.classList.add('show');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  $('siMetro').classList.toggle('on', SI.metro); $('siSelTool').classList.toggle('on', SI.selTool); stepM.classList.toggle('siSelOn', SI.selTool);
   siApplyAutoClass(); siBuildLens(); siBuildPiano(); siRenderSteps(); siRefresh();
   siStash(); if (SI.steps.length > 1 || SI.steps.some(st => st.notes.length)) smOpenWin(true);
 }
-function closeStepInput() { smClose(); siStopPlay(); if (SI.remap) siSetRemap(false); SI.held.clear(); stepM.classList.remove('show'); $('siKbPop').classList.remove('show'); $('siKbBtn').classList.remove('on'); $('siHelpPop').classList.remove('show'); $('siTip').classList.remove('show'); }
+function closeStepInput() { smClose(); siStopPlay(); SI.box = null; SI.padOpen = false; if (SI.remap) siSetRemap(false); SI.held.clear(); stepM.classList.remove('show'); $('siKbPop').classList.remove('show'); $('siKbBtn').classList.remove('on'); $('siHelpPop').classList.remove('show'); $('siTip').classList.remove('show'); }
 function siExport(at0, bundle) {   // bundle: 스텝 하나 = 한 묶음 (편집 화면에서 통째로 선택)
   const list = siExportList();
   if (!list.length) { toast('내보낼 노트가 없어요'); return; }
@@ -3977,6 +4056,31 @@ $('stepMgr').addEventListener('pointerdown', e => { if (e.target.id === 'stepMgr
 $('siCurName').onclick = () => smOpenWin();
 document.querySelectorAll('#smSort [data-sort]').forEach(b => b.onclick = () => smSort(b.dataset.sort));
 $('siSpread').onclick = () => siShiftGaps(1);
+$('siSelTool').onclick = () => siSetSelTool(!SI.selTool);
+$('siMetro').onclick = () => {
+  SI.metro = !SI.metro; siSaveCfg(); $('siMetro').classList.toggle('on', SI.metro);
+  if (SI.metro && !SI.playing) { AC(); click(ac.currentTime + 0.02, true); }
+  toast(SI.metro ? '메트로놈 켬 — 재생할 때 박자 소리가 나요' : '메트로놈 끔');
+};
+// 옮기기 컨트롤러: 누르면 한 칸 · 꾹 누르고 있으면 계속
+{
+  const pad = $('siSelPad'); let rt = 0;
+  const stopRep = () => { clearTimeout(rt); rt = 0; };
+  const mv = d => { const [ds, dp] = { left: [-S.grid, 0], right: [S.grid, 0], up: [0, 1], down: [0, -1] }[d]; siMoveSel(ds, dp, 0); siSelVisible(); };
+  $('sspFab').addEventListener('click', () => { SI.padOpen = true; siPadPos(); });
+  $('sspClose').addEventListener('click', () => { SI.padOpen = false; siPadPos(); });
+  $('sspDel').addEventListener('click', () => siDelSel());
+  pad.querySelectorAll('[data-mv]').forEach(b => {
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault(); stopRep(); const d = b.dataset.mv; mv(d);
+      const again = () => { mv(d); rt = setTimeout(again, 90); };
+      rt = setTimeout(again, 380);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => b.addEventListener(n, stopRep));
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  pad.addEventListener('pointerdown', e => e.stopPropagation());
+}
 $('siTight').onclick = () => siShiftGaps(-1);
 // 옥타브 버튼: 모바일에서는 '넣을 위치' 자리(아래 줄)로 옮기고, 넓은 화면에서는 원래 위치(위)로
 {
@@ -3989,7 +4093,7 @@ $('siTight').onclick = () => siShiftGaps(-1);
   const bar = stepM.querySelector('.siStepBar'), tools = stepM.querySelector('.siBoardHead'), top = stepM.querySelector('.siBoardTop');
   const head = stepM.querySelector('.mhead'), title = head.querySelector('.siTitle');
   const place = () => {
-    if (siMobile()) { if (bar.parentNode !== head) { title.after(bar); $('siClose').before(tools); } }
+    if (siMobile()) { if (bar.parentNode !== head) { title.after(bar); $('siFs').before(tools); } }
     else if (bar.parentNode !== top) top.append(bar, tools);
   };
   place(); window.addEventListener('resize', place);
@@ -5176,7 +5280,7 @@ $('zoomIn').onclick = () => setZoom(STEP_W * 1.25, ROW_H);
 $('zoomOut').onclick = () => setZoom(STEP_W / 1.25, ROW_H);
 $('helpBtn').onclick = () => $('help').classList.add('show');
 { // 전체화면 (fullscreen.js 공용: 페이지를 옮겨도 첫 터치에 다시 전체화면으로 이어짐)
-  const mine = [$('fsBtn'), $('mpFs')].filter(Boolean);
+  const mine = [$('fsBtn'), $('mpFs'), $('siFs')].filter(Boolean);
   const ic = { iconIn: svg('fsEnter'), iconOut: svg('fsExit') };
   if (window.TSFS) { mine.forEach(b => TSFS.bind(b, { ...ic, notify: toast })); TSFS.onChange(() => setTimeout(layout, 60)); }
 }
