@@ -319,8 +319,8 @@ const DK = {
 
 
 const mkTrack = (id, inst, name) => ({ id, name: name || INSTS[inst].label, inst, color: null, vol: 1, mute: false, solo: false, snd: preset(inst) });
-const PKEYS = ['notes', 'bpm', 'grid', 'bars', 'key', 'labelMode', 'tracks', 'active', 'nextId', 'folders'];
-const blankProject = () => ({ notes: [], bpm: 100, grid: 2, bars: 32, key: 'off', labelMode: 'sol', tracks: [mkTrack(1, 'piano', '피아노')], active: 1, nextId: 2, folders: [] });
+const PKEYS = ['notes', 'bpm', 'grid', 'bars', 'ts', 'composer', 'key', 'labelMode', 'tracks', 'active', 'nextId', 'folders'];
+const blankProject = () => ({ notes: [], bpm: 100, grid: 2, bars: 32, ts: 4, composer: '', key: 'off', labelMode: 'sol', tracks: [mkTrack(1, 'piano', '피아노')], active: 1, nextId: 2, folders: [] });
 const isDrumTrack = t => t && t.inst === 'drums';
 const isVocalTrack = t => !!(t && INSTS[t.inst] && INSTS[t.inst].vocal);
 
@@ -375,7 +375,7 @@ function exportMidi(proj = S, name = (curItem() || {}).name) {
   const chunk = a => { const L = a.length; return [0x4d,0x54,0x72,0x6b,(L>>>24)&255,(L>>16)&255,(L>>8)&255,L&255].concat(a); };
   const us = Math.round(60000000 / proj.bpm), t0 = [];
   vlq(t0, 0); t0.push(0xFF, 0x51, 0x03, (us >> 16) & 255, (us >> 8) & 255, us & 255);
-  vlq(t0, 0); t0.push(0xFF, 0x58, 0x04, 4, 2, 24, 8);
+  vlq(t0, 0); t0.push(0xFF, 0x58, 0x04, [2, 3, 4, 5].includes(proj.ts) ? proj.ts : 4, 2, 24, 8);
   vlq(t0, 0); t0.push(0xFF, 0x2F, 0x00);
   const chunks = [chunk(t0)]; let chan = 0;
   for (const tr of proj.tracks) {
@@ -409,7 +409,7 @@ function parseMidi(buf) {
   if (str(4) !== 'MThd') throw new Error('MIDI 파일이 아니에요');
   const hl = u32(); u16(); const ntr = u16(), div = u16(); p += hl - 6;
   if (div & 0x8000) throw new Error('SMPTE 타이밍 MIDI는 아직 지원하지 않아요');
-  let tempo = null; const tracks = [];
+  let tempo = null, tsig = null; const tracks = [];
   for (let t = 0; t < ntr && p + 8 <= buf.byteLength; t++) {
     const id = str(4), len = u32(), end = Math.min(buf.byteLength, p + len);
     if (id !== 'MTrk') { p = end; continue; }
@@ -422,6 +422,7 @@ function parseMidi(buf) {
       if (st === 0xFF) {
         const type = d.getUint8(p++), l = vlq();
         if (type === 0x51 && tempo == null) tempo = (d.getUint8(p) << 16) | (d.getUint8(p + 1) << 8) | d.getUint8(p + 2);
+        if (type === 0x58 && tsig == null && d.getUint8(p + 1) === 2) tsig = d.getUint8(p);   // 박자표 (x/4만)
         else if (type === 0x03 && !name) { try { name = new TextDecoder().decode(new Uint8Array(buf, p, l)); } catch (e) {} }
         else if (type === 0x05 && l) {   // 가사 (UTF-8, 아니면 EUC-KR)
           const raw = new Uint8Array(buf, p, l); let txt = '';
@@ -444,7 +445,7 @@ function parseMidi(buf) {
       tracks.push({ name, ch: +ch, prog: byCh[ch].prog, notes: ns, lyrics: ly > ns.length * 0.3 });
     }
   }
-  return { tpq: div, bpm: Math.round(60000000 / (tempo || 500000)), tracks };
+  return { tpq: div, bpm: Math.round(60000000 / (tempo || 500000)), tracks, ts: [2, 3, 4, 5].includes(tsig) ? tsig : 4 };
 }
 function instFromProgram(prog) {   // GM 악기 번호 → 가장 가까운 악기
   const exact = Object.keys(INSTS).find(k => !INSTS[k].drum && INSTS[k].prog === prog); if (exact) return exact;
@@ -465,7 +466,7 @@ function midiToProject(M) {
     }
   }
   if (!P.tracks.length) throw new Error('MIDI 안에 노트가 없어요');
-  P.active = P.tracks[0].id; P.nextId = id; P.bars = Math.max(32, Math.ceil(maxEnd / 16) + 4);
+  P.active = P.tracks[0].id; P.nextId = id; P.bars = Math.max(32, Math.ceil(maxEnd / 16) + 4); P.ts = M.ts || 4;
   return P;
 }
 
@@ -552,7 +553,7 @@ function drawThumb(cv, p) {
   let end = 0, lo = 127, hi = 0; for (const n of notes) { end = Math.max(end, n.s + n.l); lo = Math.min(lo, n.p); hi = Math.max(hi, n.p); }
   lo -= 2; hi += 2; const span = Math.max(12, hi - lo), rowH = (h - 16) / span, sx = (w - 16) / Math.max(16, end);
   c.strokeStyle = '#1b1d22'; c.lineWidth = 1;
-  for (let b = 0; b <= end; b += 16) { const x = 8 + b * sx; c.beginPath(); c.moveTo(x + 0.5, 0); c.lineTo(x + 0.5, h); c.stroke(); }
+  for (let b = 0, BR = ([2, 3, 4, 5].includes(p.ts) ? p.ts : 4) * 4; b <= end; b += BR) { const x = 8 + b * sx; c.beginPath(); c.moveTo(x + 0.5, 0); c.lineTo(x + 0.5, h); c.stroke(); }
   const col = {}; (p.tracks || []).forEach(t => col[t.id] = t.color || (INSTS[t.inst] || INSTS.piano).color);
   for (const n of notes) {
     c.globalAlpha = 0.5 + 0.5 * (n.v ?? 1); c.fillStyle = col[n.t] || '#5fa8ff';

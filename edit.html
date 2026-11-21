@@ -5,7 +5,7 @@
 <link rel="icon" href="./Asset/icon.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Thaniya-SoundLab</title>
-<link rel="stylesheet" href="app.css?v=20261121f">
+<link rel="stylesheet" href="app.css?v=20261122i">
 </head>
 <body data-page="edit">
 
@@ -28,8 +28,8 @@
     <button class="ib" id="undoBtn" data-icon="undo" title="되돌리기 (Ctrl+Z)"></button>
     <button class="ib" id="redoBtn" data-icon="redo" title="다시 실행 (Ctrl+Shift+Z)"></button>
   </div>
-  <div class="pill mobHide"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span><span class="wl">반주 · 비트</span></button></div>
-  <div class="pill mobHide"><button class="ib wide" id="stepBtn" title="스텝 입력 (Musical Typing) — 컴퓨터 키보드(모바일은 터치 건반)로 연주해서 멜로디 넣기 (K)"><span data-icon="keys"></span><span class="wl">스텝 입력</span></button></div>
+  <div class="pill mobHide"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span><span class="wl">반주</span></button></div>
+  <div class="pill mobHide"><button class="ib wide" id="stepBtn" title="스텝 입력 (Musical Typing) — 컴퓨터 키보드(모바일은 터치 건반)로 연주해서 멜로디 넣기 (K)"><span data-icon="keys"></span><span class="wl">스텝</span></button></div>
   <div class="pill mobHide"><button class="ib wide" id="scoreBtn" title="악보 만들기 — 다중 악기 악보 · 피아노 악보를 PDF로 (드럼은 빠져요)"><span data-icon="score"></span><span class="wl">악보</span></button></div>
   <div class="spacer"></div>
   <div class="pill engOnly mobHide"><button class="ib engSave" id="engSaveBtn" data-icon="upload" title="이 곡을 Thaniya Engine 프로젝트에 오디오로 저장 (Ctrl+S)"></button></div>
@@ -38,11 +38,11 @@
     <button class="ib" id="toggleR" data-icon="panelR" title="인스펙터 보이기/숨기기 (Ctrl+])"></button>
   </div>
   <div class="pill mobHide">
-    <button class="ib" id="setBtn" data-icon="gear" title="설정 — 스케일 · 건반 표기 · 격자 · 메트로놈"></button>
+    <button class="ib" id="setBtn" data-icon="gear" title="설정 — 박자 · 스케일 · 메트로놈 · 단축키 · 튜토리얼"></button>
     <button class="ib" id="midiBtn" data-icon="download" title="내보내기 (프로젝트 · MIDI · MP3)"></button>
     <button class="ib" id="clearBtn" data-icon="trash" title="현재 트랙 노트 모두 지우기"></button>
-    <button class="ib" id="helpBtn" title="단축키 도움말">?</button>
-    <button class="ib" id="tutBtn" title="튜토리얼 (처음 쓰는 법 둘러보기)"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></svg></button>
+    <button class="ib kbHide" id="helpBtn" title="단축키 도움말">?</button>
+    <button class="ib kbHide" id="tutBtn" title="튜토리얼 (처음 쓰는 법 둘러보기)"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></svg></button>
   </div>
   <button class="ib" id="fsBtn" data-icon="fsEnter" title="전체화면 (F11)"></button>
   <button class="ib" id="moreBtn" title="더보기 메뉴"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
@@ -60,7 +60,7 @@
       <div id="corner"></div>
       <div id="rulerWrap"><canvas id="ruler"></canvas></div>
       <div id="keysWrap"><canvas id="keys"></canvas></div>
-      <div id="rollWrap"><canvas id="roll"></canvas><div id="scroller"><div id="spacer"></div></div><div id="pasteBadge"><b><span data-icon="paste"></span>붙여넣기</b><span id="pasteInfo"></span><span>클릭: 놓기 · Shift+클릭: 계속 놓기 · 우클릭/Esc: 취소 · Ctrl+휠: 확대 · 방향키: 화면 이동</span></div>
+      <div id="rollWrap"><canvas id="roll"></canvas><div id="scroller"><div id="spacer"></div></div><div id="rollPad"><button class="sspFab" id="rpFab" aria-label="선택한 노트 옮기기"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></button><button class="sspLinkF" id="rpLinkF" type="button" title="이어 부르기 — 앞 음과 한 음처럼 부드럽게 잇기"><svg class="i" viewBox="0 0 24 24"><path d="M4 16c3-7 6-7 8-4s5 3 8-4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="20" cy="8" r="1.6" fill="currentColor"/></svg><span>잇기</span></button><div class="sspPad"><button class="sspB" data-mv="up" aria-label="반음 위로"><svg class="i" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button class="sspB" data-mv="left" aria-label="음 길이만큼 왼쪽"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="sspB sspX" id="rpClose" aria-label="접기"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button><button class="sspB" data-mv="right" aria-label="음 길이만큼 오른쪽"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="sspB" data-mv="down" aria-label="반음 아래로"><svg class="i" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><button class="sspB sspLk" id="rpLk" aria-label="이어 부르기" title="이어 부르기 (앞 음과 잇기 · 다시 누르면 풀기)"><svg class="i" viewBox="0 0 24 24"><path d="M4 16c3-7 6-7 8-4s5 3 8-4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="20" cy="8" r="1.6" fill="currentColor"/></svg></button><button class="sspB sspDel" id="rpDel" aria-label="선택한 노트 삭제" data-icon="trash"></button></div></div><div id="linkHint"><span class="lhIc"><svg class="i" viewBox="0 0 24 24"><path d="M4 16c3-7 6-7 8-4s5 3 8-4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="20" cy="8" r="1.6" fill="currentColor"/></svg></span><span class="lhTx" id="lhTx"></span><button class="lhBtn" id="lhBtn" type="button"></button></div><div id="pasteBadge"><b><span data-icon="paste"></span>붙여넣기</b><span id="pasteInfo"></span><span>클릭: 놓기 · Shift+클릭: 계속 놓기 · 우클릭/Esc: 취소 · Ctrl+휠: 확대 · 방향키: 화면 이동</span></div>
       <div id="recPanel">
         <div class="rpHead"><b><span data-icon="mic"></span>노트 변환 미리보기</b><span id="rpSrc"></span><span id="rpInfo"></span><span class="spacer" style="flex:1"></span><span id="rpBusy"></span></div>
         <div class="rpBody">
@@ -116,16 +116,16 @@
     <button class="ib" id="ebZoomIn" data-icon="plus" title="확대"></button>
   </div>
   <div class="ebRow ebActs">
-    <button class="btn" data-ed="copy">복사</button>
-    <button class="btn" data-ed="cut">잘라내기</button>
-    <button class="btn" data-ed="paste">붙여넣기</button>
-    <button class="btn" data-ed="dup">복제</button>
-    <button class="btn" data-ed="del">삭제</button>
-    <button class="btn" data-ed="link">이어 부르기</button>
-    <button class="btn" data-ed="group">묶기</button>
-    <button class="btn" data-ed="ungroup">묶음 풀기</button>
-    <button class="btn" data-ed="all">전체선택</button>
-    <button class="btn" data-ed="none">선택해제</button>
+    <div class="ebHead" id="ebHead"></div>
+    <button class="btn ebA" data-ed="copy"><span class="ebI" data-icon="copy"></span><span class="ebL">복사</span></button>
+    <button class="btn ebA" data-ed="paste"><span class="ebI" data-icon="paste"></span><span class="ebL">붙여넣기</span></button>
+    <button class="btn ebA" data-ed="dup"><span class="ebI" data-icon="dup"></span><span class="ebL">복제</span></button>
+    <button class="btn ebA" data-ed="link"><span class="ebI"><svg class="i" viewBox="0 0 24 24"><path d="M4 16c3-7 6-7 8-4s5 3 8-4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="20" cy="8" r="1.6" fill="currentColor"/></svg></span><span class="ebL">이어 부르기</span></button>
+    <button class="btn ebA" data-ed="group"><span class="ebI" data-icon="layers"></span><span class="ebL">묶기</span></button>
+    <button class="btn ebA" data-ed="ungroup"><span class="ebI" data-icon="layers"></span><span class="ebL">묶음 풀기</span></button>
+    <button class="btn ebA" data-ed="del"><span class="ebI" data-icon="trash"></span><span class="ebL">삭제</span></button>
+    <button class="btn ebA" data-ed="all"><span class="ebI" data-icon="select"></span><span class="ebL">전체 선택</span></button>
+    <button class="btn ebA" data-ed="none"><span class="ebI" data-icon="x"></span><span class="ebL">선택 해제</span></button>
     <button class="ib ebClose" id="ebClose" title="닫기">✕</button>
   </div>
   <button class="ib" id="ebFab" title="편집 메뉴 — 복사 · 붙여넣기 · 삭제 …"><span id="ebFabTx">편집</span></button>
@@ -354,8 +354,9 @@
         </div>
       </div>
       <div id="siBoardWrap"><canvas id="siBoard"></canvas></div>
-      <div id="siSelPad"><button class="sspFab" id="sspFab" aria-label="선택한 노트 옮기기"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></button>
-        <div class="sspPad"><button class="sspB" data-mv="up" aria-label="반음 위로"><svg class="i" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button class="sspB" data-mv="left" aria-label="음 길이만큼 왼쪽"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="sspB sspX" id="sspClose" aria-label="접기"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button><button class="sspB" data-mv="right" aria-label="음 길이만큼 오른쪽"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="sspB" data-mv="down" aria-label="반음 아래로"><svg class="i" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><button class="sspB sspDel" id="sspDel" aria-label="선택한 노트 삭제" data-icon="trash"></button></div>
+      <div id="siPasteBar"><span class="spbIc"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg></span><span class="spbTx"></span><button class="spbNo" id="spbNo" type="button" title="취소 (Esc)"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button><button class="spbOk" id="spbOk" type="button" title="여기에 넣기 (Enter)"><svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>넣기</span></button></div>
+      <div id="siSelPad"><button class="sspFab" id="sspFab" aria-label="선택한 노트 옮기기"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></button><button class="sspLinkF" id="sspLinkF" type="button" title="이어 부르기 — 앞 음과 한 음처럼 부드럽게 잇기"><svg class="i" viewBox="0 0 24 24"><path d="M4 16c3-7 6-7 8-4s5 3 8-4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="20" cy="8" r="1.6" fill="currentColor"/></svg><span>잇기</span></button><button class="sspLinkF sspCopyF" id="sspCopyF" type="button" title="복사 (Ctrl+C)"><svg class="i" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>복사</span></button><button class="sspLinkF sspPasteF" id="sspPasteF" type="button" title="붙여넣기 (Ctrl+V) — 좌우로 옮긴 뒤 ✓"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg><span>붙여넣기</span></button><button class="sspLinkF sspClipX" id="sspClipX" type="button" title="복사한 내용 비우기"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+        <div class="sspPad"><button class="sspB" data-mv="up" aria-label="반음 위로"><svg class="i" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button class="sspB" data-mv="left" aria-label="음 길이만큼 왼쪽"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="sspB sspX" id="sspClose" aria-label="접기"><svg class="i" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg></button><button class="sspB" data-mv="right" aria-label="음 길이만큼 오른쪽"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="sspB" data-mv="down" aria-label="반음 아래로"><svg class="i" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><button class="sspB sspCp" id="sspCp" aria-label="복사" title="복사 (Ctrl+C)"><svg class="i" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button><button class="sspB sspPs" id="sspPs" aria-label="붙여넣기" title="붙여넣기 (Ctrl+V)"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg></button><button class="sspB sspLk" id="sspLk" aria-label="이어 부르기" title="이어 부르기 (앞 음과 잇기 · 다시 누르면 풀기)"><svg class="i" viewBox="0 0 24 24"><path d="M4 16c3-7 6-7 8-4s5 3 8-4"/><circle cx="4" cy="16" r="1.6" fill="currentColor"/><circle cx="20" cy="8" r="1.6" fill="currentColor"/></svg></button><button class="sspB sspDel" id="sspDel" aria-label="선택한 노트 삭제" data-icon="trash"></button></div>
       </div>
     </div>
     <div id="siPiano"></div>
@@ -398,14 +399,51 @@
 <div id="siTip"></div>
 <div id="placeBar"><button class="btn" id="plCancel" title="취소"><span data-icon="x"></span></button><div class="plTx"><b>넣을 위치</b><span id="plPos"></span><small>위 눈금자를 누르거나 끌어서 ▼를 옮기세요</small></div><button class="btn" id="plStart" title="곡 처음으로"><span data-icon="home"></span></button><button class="btn primary" id="plOk"><span data-icon="download"></span>여기에 넣기</button></div>
 <div id="tut"></div>
-<div id="setPop" role="dialog" aria-label="설정">
-  <div class="spHead"><b>설정</b><button class="ib" id="setClose" title="닫기 (Esc)" data-icon="x"></button></div>
-  <label class="spRow"><span>스케일</span><select id="key"></select></label>
-  <label class="spRow"><span>건반 표기</span><select id="labelMode"><option value="sol">도레미</option><option value="abc">C D E</option></select></label>
-  <label class="spRow"><span>격자 (스냅)</span><select id="spGrid"><option value="1">1/16</option><option value="2">1/8</option><option value="4">1/4</option><option value="8">1/2</option></select></label>
-  <div class="spRow"><span>메트로놈</span><button class="spTog" id="spMetro" type="button"><i></i></button></div>
-  <div class="spRow"><span>카운트인 (1마디)</span><button class="spTog" id="spCount" type="button"><i></i></button></div>
-</div>
+<div id="setM"><div class="smCard" role="dialog" aria-label="설정">
+  <div class="smTop">
+    <div class="smTitle"><span class="smGear" data-icon="gear"></span><b>설정</b></div>
+    <div class="smSearch"><span data-icon="search"></span><input type="text" id="smQ" placeholder="설정 검색 (예: 박자, 메트로놈, 복사, 펜)" autocomplete="off"></div>
+    <button class="ib smX" id="smX" title="닫기 (Esc)" data-icon="x"></button>
+  </div>
+  <div class="smSub"><span class="smTab">사용자</span><span class="smNote">변경하면 바로 적용되고 이 브라우저에 저장돼요</span></div>
+  <div class="smBody">
+    <nav class="smNav" id="smNav">
+      <button type="button" data-pg="general" class="on">일반</button>
+      <button type="button" data-pg="play">재생 · 녹음</button>
+      <button type="button" data-pg="keys">단축키</button>
+      <button type="button" data-pg="about">정보</button>
+      <div class="smNavFoot">
+        <div class="smPair"><button type="button" class="smPairB" id="smTut"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></svg><span>튜토리얼</span></button><button type="button" class="smPairB" id="smKeyB"><span class="smKq">⌘</span><span>단축키</span></button></div>
+        <div class="smApp"><b data-icon="logo" data-logo></b><div><strong>Thaniya-SoundLab</strong><span>작곡을 간단하게</span></div></div>
+      </div>
+    </nav>
+    <div class="smMain" id="smMain">
+      <section data-pg="general"><h2>일반</h2>
+      <div class="smRow" data-q="박자 time signature 2/4 3/4 4/4 5/4 마디"><div class="smL"><b>박자</b><p>한 마디에 4분음표가 몇 개인지 정해요. 마디 줄 · 메트로놈 · 악보 · 반주가 따라 바뀌어요.</p></div><div class="smC"><select id="tsSel"><option value="2">2/4 박자</option><option value="3">3/4 박자</option><option value="4">4/4 박자</option><option value="5">5/4 박자</option></select></div></div>
+      <div class="smRow" data-q="스케일 조 key 장조"><div class="smL"><b>스케일</b><p>고른 조에 맞는 건반 줄을 밝게 보여 주고, 악보 조표에도 쓰여요.</p></div><div class="smC"><select id="key"></select></div></div>
+      <div class="smRow" data-q="건반 표기 도레미 CDE 계이름 음이름"><div class="smL"><b>건반 표기</b><p>건반과 노트에 도레미로 쓸지, C D E로 쓸지 골라요.</p></div><div class="smC"><select id="labelMode"><option value="sol">도레미</option><option value="abc">C D E</option></select></div></div>
+      <div class="smRow" data-q="격자 스냅 grid 1/8 1/16"><div class="smL"><b>격자 (스냅)</b><p>노트를 그리고 옮길 때 맞춰지는 칸 크기예요.</p></div><div class="smC"><select id="spGrid"><option value="1">1/16</option><option value="2">1/8</option><option value="4">1/4</option><option value="8">1/2</option></select></div></div>
+      </section>
+      <section data-pg="play"><h2>재생 · 녹음</h2>
+      <div class="smRow" data-q="메트로놈 박자 소리 클릭 metronome"><div class="smL"><b>메트로놈</b><p>재생·녹음할 때 박자 소리를 내요. 마디 첫 박은 더 크게 울려요.</p></div><div class="smC"><button class="spTog" id="spMetro" type="button"><i></i></button></div></div>
+      <div class="smRow" data-q="카운트인 녹음 준비 count-in"><div class="smL"><b>카운트인 (1마디)</b><p>녹음을 시작하기 전에 한 마디를 먼저 세어 줘요.</p></div><div class="smC"><button class="spTog" id="spCount" type="button"><i></i></button></div></div>
+      </section>
+      <section data-pg="keys"><h2>단축키</h2>
+        <p class="smLead">키 칸을 누른 뒤 새로 쓸 키를 누르면 바뀌어요 · <kbd>Esc</kbd> 취소 · 다른 기능과 겹치면 그쪽은 비워져요.</p>
+        <div class="kbList" id="kbList"></div>
+        <div class="kbFoot"><button type="button" class="btn sm" id="kbReset">모두 기본값으로</button></div>
+        <h3 class="smH3">마우스 · 그 밖의 조작 <span>(바꿀 수 없음)</span></h3>
+        <div class="kbRef" id="kbRef"></div>
+      </section>
+      <section data-pg="about"><h2>정보</h2>
+        <div class="smRow" data-q="튜토리얼 사용법 처음 tutorial"><div class="smL"><b>튜토리얼</b><p>처음 쓰는 법을 화면을 짚어 가며 다시 볼 수 있어요.</p></div><div class="smC smBtns"><button type="button" class="btn sm" id="smTutPc">PC 튜토리얼</button><button type="button" class="btn sm" id="smTutMob">모바일 튜토리얼</button></div></div>
+        <div class="smRow" data-q="드럼 키트 타악기"><div class="smL"><b>드럼</b><p>드럼은 '드럼 키트' 악기 트랙으로 넣어요. 드럼 트랙을 고르면 건반 대신 타악기 이름이 보여요.</p></div></div>
+        <div class="smRow" data-q="저장 브라우저 자동 저장"><div class="smL"><b>저장</b><p>곡과 설정은 이 브라우저에 자동으로 저장돼요. 다른 기기로 옮기려면 마이페이지에서 프로젝트 파일로 내보내세요.</p></div></div>
+      </section>
+      <div class="smEmpty" id="smEmpty">검색 결과가 없어요</div>
+    </div>
+  </div>
+</div></div>
 <div id="toast"></div>
 <div id="ctx"></div>
 <div id="help"><div class="card">
@@ -435,7 +473,7 @@
 <script>
 /* 스크립트 로더: app.js 든 app.js.txt 든 있는 이름으로 불러오고, 서버가 .txt 를 text/plain(+nosniff)으로 막아도 내용을 읽어서 직접 실행함 */
 (function () {
-  var V = '?v=20261121f', list = [['fullscreen.js', 'fullscreen.js.txt'], ['app.js', 'app.js.txt']];
+  var V = '?v=20261122i', list = [['fullscreen.js', 'fullscreen.js.txt'], ['app.js', 'app.js.txt']];
   function run(t, src) { var s = document.createElement('script'); s.text = t + '\n//# sourceURL=' + src; document.body.appendChild(s); }
   function one(names, ok, bad) {
     if (!names.length) return bad();
