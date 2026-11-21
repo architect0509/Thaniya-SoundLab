@@ -1551,3 +1551,75 @@ input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:
   #stepModal .mhead .siLenCtl .atab{padding:6px 3px}
   #stepModal .mhead #siPlay{padding:0 7px}
 }
+/* 더보기 메뉴 — 모바일 세로: '재생 · 녹음' · '파일 · 기타'는 작은 타일 4열 */
+@media (orientation:portrait){
+  .moreGrid.g4:has(.tile){grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .moreGrid.g4 .btn.tile{gap:5px;padding:9px 3px 8px;border-radius:12px;font-size:10px;line-height:1.2;min-width:0}
+  .moreGrid.g4 .btn.tile svg.i{width:20px;height:20px}
+  .moreGrid.g4 .btn.tile .qm{font-size:18px;line-height:20px}
+  .moreGrid.g4 .btn.tile .tl{word-break:keep-all}
+}
+#siPiano .pk kbd{opacity:.4}   /* PC: 연주 키를 늘 흐리게 보여 주고, 마우스를 올리거나 누르면 또렷하게 */
+#stepModal.siSelOn #siBoardWrap{border-color:var(--accentLine)}
+/* 녹음 감도 슬라이더 양옆 표시 (왼쪽 낮음 · 오른쪽 높음) */
+.gEnd{font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap;flex:none}
+.lab .gEnd{margin:0 2px}
+.gRow{display:flex;align-items:center;gap:8px;width:100%}
+.gRow input{flex:1;min-width:0}
+.moreF .gRow .gEnd{font-size:12px}
+/* 더보기 메뉴: 항목 위아래 간격을 조금 넓게 (가로로 낮은 화면은 그대로 촘촘하게) */
+@media (min-height:521px){
+  .moreT{margin:22px 2px 10px}
+  .moreBox>.moreT:first-child,#moreBody>.moreT:first-child{margin-top:8px}
+  .moreGrid{row-gap:14px}
+  .moreGrid.g4:has(.tile){row-gap:12px}
+  .moreF{gap:7px}
+  .moreF .gRow{margin-top:2px}
+}
+/* PC 설정 팝오버 (상단 톱니 버튼) */
+#setPop{display:none;position:fixed;z-index:80;width:260px;padding:12px 14px 14px;border-radius:14px;background:linear-gradient(180deg,#1b1d22,#141519);border:1px solid var(--line2);box-shadow:0 18px 44px rgba(0,0,0,.6)}
+#setPop.show{display:block}
+#setPop .spHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+#setPop .spHead b{font-size:13px}
+#setPop .spRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #23262c;color:var(--muted);font-size:12px}
+#setPop .spRow:first-of-type{border-top:none}
+#setPop .spRow select{width:140px;height:30px;font-size:12.5px}
+#setPop .spTog{width:38px;height:22px;border-radius:99px;border:1px solid #3a3d45;background:#24262c;position:relative;cursor:pointer;padding:0;flex:none}
+#setPop .spTog i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#8a8f99;transition:left .15s,background .15s}
+#setPop .spTog.on{background:var(--accentDim);border-color:var(--accentLine)}
+#setPop .spTog.on i{left:18px;background:var(--accent)}
+#setBtn.on{color:var(--accent)}
+/* ───────── 악보 만들기 창 ───────── */
+#scoreM{position:fixed;inset:0;z-index:112;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:14px}
+#scoreM.show{display:flex}
+#scoreM .scCard{width:min(980px,100%);height:min(94dvh,100%);display:flex;flex-direction:column;border-radius:18px;background:linear-gradient(180deg,#1b1d22,#131417);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:hidden}
+#scoreM .scHead{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
+#scoreM .scHead b{font-size:15px}
+#scoreM .scSong{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#scoreM .scBar{padding:4px 16px 8px;display:flex;flex-direction:column;gap:8px}
+#scoreM .scSec{font-size:11.5px;font-weight:700;color:#9aa0ab;display:flex;align-items:center;gap:10px;margin-top:4px}
+#scoreM .scAll{display:flex;gap:4px}
+#scoreM .scAll button{font:inherit;font-weight:600;font-size:11px;color:var(--muted);background:#22242a;border:1px solid #2f3238;border-radius:8px;padding:2px 8px;cursor:pointer}
+#scoreM .scModes{display:flex;gap:8px}
+#scoreM .scMode{flex:0 0 auto;padding:9px 16px;border-radius:11px;border:1px solid #2f3238;background:#1d1f24;color:var(--text);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+#scoreM .scMode.on{border-color:var(--accentLine);background:var(--accentDim);color:var(--accent)}
+#scoreM .scTracks{display:flex;flex-wrap:wrap;gap:6px;max-height:96px;overflow:auto}
+#scoreM .scTr{display:flex;align-items:center;gap:7px;padding:6px 11px 6px 7px;border-radius:10px;border:1px solid #2f3238;background:#1a1c20;color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+#scoreM .scTr .scCk{width:18px;height:18px;border-radius:6px;border:1.5px solid #4a4e57;display:flex;align-items:center;justify-content:center;color:transparent}
+#scoreM .scTr .scCk svg.i{width:13px;height:13px;stroke-width:3}
+#scoreM .scTr.on{color:var(--text);border-color:color-mix(in srgb,var(--c) 55%,#2f3238)}
+#scoreM .scTr.on .scCk{background:var(--c);border-color:var(--c);color:#111}
+#scoreM .scNote{padding:0 16px 8px;font-size:11.5px;color:var(--muted)}
+#scoreM .scView{flex:1;overflow:auto;background:#0c0d10;border-top:1px solid #23262c;border-bottom:1px solid #23262c;padding:16px;display:flex;flex-direction:column;align-items:center;gap:16px}
+#scoreM .scPage{width:min(100%,760px);flex:none;box-shadow:0 6px 24px rgba(0,0,0,.5);border-radius:4px;overflow:hidden;background:#fff}
+#scoreM .scPage svg{display:block;width:100%;height:auto}
+#scoreM .scEmpty{margin:auto;color:var(--muted);font-size:13px}
+#scoreM .scFoot{display:flex;align-items:center;gap:8px;padding:10px 16px max(12px,env(safe-area-inset-bottom))}
+#scoreM .scCnt{font-size:12px;color:var(--muted)}
+#scoreM #scPdf.busy{opacity:.7;cursor:progress}
+@media (max-width:760px){
+  #scoreM{padding:0}
+  #scoreM .scCard{height:100dvh;border-radius:0;border:none}
+  #scoreM .scMode{flex:1;padding:9px 6px;font-size:12.5px}
+  #scoreM .scView{padding:10px}
+}
