@@ -2,6 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <!-- 로고 인트로 (약 4.5초, 클릭·키로 건너뛰기) — 화면보다 먼저 뜨도록 head 맨 위에 -->
+  <script src="./thaniya-intro.js" data-text="THANIYA PROJECT"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thaniya-SoundLab - 작곡을 간단하게</title>
   <link rel="icon" href="./Asset/icon.png" type="image/png">
@@ -1100,7 +1102,9 @@ requestAnimationFrame(frame);
   $('tpSkip').addEventListener('click', () => close(true));
   $('tpGo').addEventListener('click', () => close(false));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(false); stopAll(); } });
-  if (!hiddenNow()) setTimeout(open, 1200);
+  // 인트로가 도는 중이면 끝난 뒤에 띄워요
+  const later = () => { if (!hiddenNow()) setTimeout(open, 1200); };
+  if (document.documentElement.classList.contains('th-intro')) document.addEventListener('thaniyaintroend', later, { once: true }); else later();
 })();
 })();
 </script>
