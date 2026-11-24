@@ -5,7 +5,7 @@
 <link rel="icon" href="./Asset/icon.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Thaniya-SoundLab</title>
-<link rel="stylesheet" href="app.css?v=20261122i">
+<link rel="stylesheet" href="app.css?v=20261124b">
 </head>
 <body data-page="edit">
 
@@ -30,7 +30,7 @@
   </div>
   <div class="pill mobHide"><button class="ib wide" id="accBtn" title="반주 · 비트 만들기 — 추천 반주 · 샘플 반주 · 비트 (J)"><span data-icon="music"></span><span class="wl">반주</span></button></div>
   <div class="pill mobHide"><button class="ib wide" id="stepBtn" title="스텝 입력 (Musical Typing) — 컴퓨터 키보드(모바일은 터치 건반)로 연주해서 멜로디 넣기 (K)"><span data-icon="keys"></span><span class="wl">스텝</span></button></div>
-  <div class="pill mobHide"><button class="ib wide" id="scoreBtn" title="악보 만들기 — 다중 악기 악보 · 피아노 악보를 PDF로 (드럼은 빠져요)"><span data-icon="score"></span><span class="wl">악보</span></button></div>
+  <div class="pill mobHide" hidden style="display:none"><button class="ib wide" id="scoreBtn" title="악보 만들기 — 다중 악기 악보 · 피아노 악보를 PDF로 (드럼은 빠져요)"><span data-icon="score"></span><span class="wl">악보</span></button></div>
   <div class="spacer"></div>
   <div class="pill engOnly mobHide"><button class="ib engSave" id="engSaveBtn" data-icon="upload" title="이 곡을 Thaniya Engine 프로젝트에 오디오로 저장 (Ctrl+S)"></button></div>
   <div class="pill">
@@ -39,7 +39,7 @@
   </div>
   <div class="pill mobHide">
     <button class="ib" id="setBtn" data-icon="gear" title="설정 — 박자 · 스케일 · 메트로놈 · 단축키 · 튜토리얼"></button>
-    <button class="ib" id="midiBtn" data-icon="download" title="내보내기 (프로젝트 · MIDI · MP3)"></button>
+    <button class="ib" id="midiBtn" data-icon="download" title="내보내기 — 악보 · 피아노 롤 영상 · MP3 · MIDI · 프로젝트"></button>
     <button class="ib" id="clearBtn" data-icon="trash" title="현재 트랙 노트 모두 지우기"></button>
     <button class="ib kbHide" id="helpBtn" title="단축키 도움말">?</button>
     <button class="ib kbHide" id="tutBtn" title="튜토리얼 (처음 쓰는 법 둘러보기)"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></svg></button>
@@ -312,7 +312,7 @@
       <span class="siCap">옥타브</span>
       <div class="siOct"><button class="ib" id="siOctDn" data-tip="옥타브 내리기" data-key="-"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12"/></svg><kbd id="siOctDnK" hidden></kbd></button><b id="siOctV"></b><button class="ib" id="siOctUp" data-tip="옥타브 올리기" data-key="+"><svg class="i" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg><kbd id="siOctUpK" hidden></kbd></button></div>
     </div>
-    <div class="siGrp siCtl siLenCtl"><span class="siCap">음 길이</span><div class="atabs" id="siLens"></div></div>
+    <div class="siGrp siCtl siLenCtl"><span class="siCap">음 길이</span><button type="button" class="siLenBtn" id="siLenBtn" data-tip="음 길이 — 눌러서 고르기" data-key="; / '"></button><div class="siLenPop" id="siLenPop"><div class="atabs" id="siLens"></div></div></div>
     <label class="chk siSwitch" data-tip="켜면 건반에서 손을 떼는 순간 바로 보드에 들어가요"><input type="checkbox" id="siAuto"><i></i><span>바로 입력</span></label>
     <span style="flex:1"></span>
     <button class="ib siHb" id="siKbBtn" data-tip="키보드 배치 보기 · 연주 키 바꾸기"><span data-icon="keys"></span></button>
@@ -473,7 +473,7 @@
 <script>
 /* 스크립트 로더: app.js 든 app.js.txt 든 있는 이름으로 불러오고, 서버가 .txt 를 text/plain(+nosniff)으로 막아도 내용을 읽어서 직접 실행함 */
 (function () {
-  var V = '?v=20261122i', list = [['fullscreen.js', 'fullscreen.js.txt'], ['app.js', 'app.js.txt']];
+  var V = '?v=20261124b', list = [['fullscreen.js', 'fullscreen.js.txt'], ['app.js', 'app.js.txt']];
   function run(t, src) { var s = document.createElement('script'); s.text = t + '\n//# sourceURL=' + src; document.body.appendChild(s); }
   function one(names, ok, bad) {
     if (!names.length) return bad();

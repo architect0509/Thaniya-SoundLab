@@ -791,7 +791,8 @@ html,body{height:100dvh}
 #moreBtn,#editBar{display:none}
 #moreM{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;background:rgba(0,0,0,.55)}
 #moreM.show{display:flex}
-.moreBox{width:100%;max-height:80dvh;overflow:auto;background:var(--panel);border-top:1px solid var(--line2);border-radius:16px 16px 0 0;padding:12px 12px max(14px,env(safe-area-inset-bottom))}
+.moreBox{width:100%;max-height:80dvh;overflow:auto;background:var(--panel);border-top:1px solid var(--line2);border-radius:16px 16px 0 0;padding:12px 12px calc(36px + env(safe-area-inset-bottom))}
+#moreBody::after{content:"";display:block;height:12px}   /* 맨 아래 버튼이 화면 끝에 붙지 않게 여유 */
 .moreHead{display:flex;align-items:center;justify-content:space-between;font-size:14px}
 .moreT{font-size:11px;color:var(--muted);font-weight:700;margin:14px 2px 6px}
 .moreGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -1010,7 +1011,7 @@ input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:
 /* 더보기 메뉴 — 모바일 가로: 한 줄에 더 많이 배치해서 스크롤을 줄임 */
 @media (max-height:520px) and (orientation:landscape){
   #moreM{align-items:center;justify-content:center}
-  .moreBox{width:min(96vw,900px);max-height:96dvh;border-radius:16px;padding:8px 12px max(10px,env(safe-area-inset-bottom))}
+  .moreBox{width:min(96vw,900px);max-height:96dvh;border-radius:16px;padding:8px 12px calc(22px + env(safe-area-inset-bottom))}
   .moreBox::before{display:none}
   .moreT{margin:8px 2px 4px}
   .moreGrid{grid-template-columns:repeat(4,1fr);gap:6px}
@@ -1074,7 +1075,7 @@ input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:
 /* ───────── 스텝 여러 개 (스텝 입력) ───────── */
 .siStepBar{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-width:0}
 .siStepT{font-size:11px;font-weight:800;color:var(--accent);background:var(--accentDim);border:1px solid var(--accentLine);border-radius:7px;padding:3px 8px;white-space:nowrap;flex:none}
-.siStepList{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex:1;min-width:0;padding:2px 1px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.siStepList{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex:1;min-width:0;padding:2px 1px;-webkit-overflow-scrolling:touch}
 .siStepList::-webkit-scrollbar{height:5px}
 .sst{display:flex;align-items:center;gap:3px;flex:none;height:32px;padding:0 4px 0 3px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--muted);transition:border-color .15s,background .15s}
 .sst:hover{border-color:#3d4048;color:var(--text)}
@@ -1886,3 +1887,161 @@ input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:
   #scoreM .scSplit{flex-direction:column}
   #scoreM .scSide{width:auto;max-height:44dvh;border-right:none;border-bottom:1px solid #23262c;padding:10px 12px}
 }
+
+/* ───────── 선택 메뉴(드롭다운): 작고 예쁜 메뉴 ───────── */
+select:not([multiple]):not([size]){-webkit-appearance:none;appearance:none;padding-right:22px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8f99' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9.5l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;background-size:11px;cursor:pointer}
+#ddPop{position:fixed;z-index:10000;display:none;flex-direction:column;min-width:120px;max-width:min(320px,calc(100vw - 16px));overflow:auto;overscroll-behavior:contain;padding:4px;border-radius:12px;background:rgba(28,30,35,.97);border:1px solid #33363d;box-shadow:0 14px 36px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transform-origin:top center}
+#ddPop.up{transform-origin:bottom center}
+#ddPop.show{display:flex;animation:ddIn .14s cubic-bezier(.2,.8,.2,1)}
+@keyframes ddIn{from{opacity:0;transform:scale(.96) translateY(-3px)}to{opacity:1;transform:none}}
+#ddPop .ddI{display:flex;align-items:center;gap:10px;width:100%;flex:none;text-align:left;padding:7px 9px 7px 11px;border:none;border-radius:8px;background:none;color:var(--text);font:inherit;font-size:13px;font-weight:600;line-height:1.25;cursor:pointer;white-space:nowrap}
+#ddPop .ddI.ind{padding-left:18px}
+#ddPop .ddI .ddT{flex:1;overflow:hidden;text-overflow:ellipsis}
+#ddPop .ddI .ddC{width:15px;height:15px;flex:none;fill:none;stroke:var(--accent);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+#ddPop .ddI.hi{background:rgba(255,255,255,.07)}
+#ddPop .ddI.on{color:var(--accent)}
+#ddPop .ddI.on .ddC{opacity:1}
+#ddPop .ddI.dis{opacity:.4;pointer-events:none}
+#ddPop .ddG{flex:none;padding:8px 10px 3px;font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.02em}
+@media (pointer:coarse){#ddPop .ddI{padding:10px 10px 10px 12px;font-size:14px}}
+
+/* ───────── 내보내기 창: 악보 · 피아노 롤 앱 아이콘 ───────── */
+.xcard{width:min(500px,100%)}
+.xapps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.xapp{display:flex;flex-direction:column;align-items:center;gap:5px;padding:16px 8px 13px;border-radius:16px;border:1px solid var(--line2);background:linear-gradient(180deg,#1d1f24,#15161a);color:var(--text);cursor:pointer;font:inherit;transition:transform .18s var(--ease),border-color .18s,box-shadow .18s}
+.xapp:hover{transform:translateY(-2px);border-color:var(--accentLine);box-shadow:0 12px 28px rgba(0,0,0,.45),0 0 0 1px rgba(242,194,48,.12)}
+.xapp:active{transform:scale(.97)}
+.xapp:focus-visible{outline:2px solid var(--accentLine);outline-offset:2px}
+.xico{width:68px;height:68px;border-radius:17px;display:block;overflow:hidden;margin-bottom:5px;box-shadow:0 8px 18px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.1);transition:transform .22s var(--ease)}
+.xapp:hover .xico{transform:scale(1.07) rotate(-3deg)}
+.xico svg{width:100%;height:100%;display:block}
+.xan{font-weight:800;font-size:13.5px}
+.xad{font-size:11px;color:var(--muted)}
+@media (max-width:420px){.xico{width:58px;height:58px;border-radius:15px}.xan{font-size:12.5px}.xad{font-size:10.5px}}
+
+/* ───────── 피아노 롤 영상 창 ───────── */
+#rollM{position:fixed;inset:0;z-index:112;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;padding:14px}
+#rollM.show{display:flex}
+#rollM .prCard{width:min(1220px,100%);height:min(94dvh,100%);display:flex;flex-direction:column;border-radius:18px;background:linear-gradient(180deg,#1b1d22,#131417);border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:hidden}
+#rollM .prHead{display:flex;align-items:center;gap:10px;padding:12px 16px 10px;border-bottom:1px solid #23262c}
+#rollM .prLogo{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#2a160a,#0a0604);color:#ff9a4d;box-shadow:inset 0 0 0 1px rgba(255,154,77,.3)}
+#rollM .prLogo svg.i{width:18px;height:18px}
+#rollM .prHead b{font-size:15px}
+#rollM .prSong{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rollM .prBody{flex:1;min-height:0;display:flex}
+#rollM .prMain{flex:1;min-width:0;display:flex;flex-direction:column;background:#0b0c0e}
+#rollM .prStage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:14px}
+#rollM #prCv{display:block;border-radius:8px;box-shadow:0 10px 34px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);background:#000}
+#rollM .prOv{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
+#rollM .prOv.show{display:flex}
+#rollM .prOvBox{width:min(340px,86%);padding:16px 18px;border-radius:14px;background:rgba(20,21,24,.92);border:1px solid var(--line2);text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+#rollM .prOvBox b{font-size:14px}
+#rollM .prOvBar{height:6px;border-radius:9px;background:#2a2d33;margin:12px 0 8px;overflow:hidden}
+#rollM .prOvBar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#ff7a2a,#ffc06a);transition:width .2s linear}
+#rollM .prOvBox p{margin:0 0 12px;font-size:11.5px;color:var(--muted)}
+#rollM .prTrans{display:flex;align-items:center;gap:10px;padding:8px 14px 12px}
+#rollM .prTrans .btn{min-width:108px;justify-content:center}
+#rollM .prTrans .btn.on{border-color:var(--accentLine);color:var(--accent)}
+#rollM #prSeek{flex:1;accent-color:#ff8a3d}
+#rollM .prTime{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:84px;text-align:right}
+#rollM .prSide{width:320px;flex:none;overflow-x:hidden;overflow-y:auto;border-left:1px solid #23262c;padding:6px 10px 16px 14px}
+#rollM .prSec{padding:10px 0 6px;border-bottom:1px solid #1f2227}
+#rollM .prSecT{font-size:11.5px;font-weight:800;color:#9aa0ab;margin-bottom:8px}
+#rollM .prRow{display:flex;align-items:center;gap:10px;min-height:32px;margin-bottom:4px}
+#rollM .prRow.full{display:block}
+#rollM .prL{flex:0 0 78px;font-size:12px;color:var(--muted);font-weight:600}
+#rollM .prSeg{flex:1;display:flex;gap:3px;padding:3px;border-radius:10px;background:#101114;border:1px solid #2a2d33}
+#rollM .prSeg button{flex:1;padding:5px 4px;border:none;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+#rollM .prSeg button.on{background:#2a2d34;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.4)}
+#rollM .prSl{flex:1;display:flex;align-items:center;gap:8px}
+#rollM .prSl input{flex:1;min-width:0;accent-color:#ff8a3d}
+#rollM .prV{font-size:11.5px;color:var(--text);min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+#rollM .prTg{margin-left:auto;width:40px;height:23px;border-radius:20px;border:none;background:#2f3239;position:relative;cursor:pointer;flex:none;transition:background .18s}
+#rollM .prTg i{position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#cfd2d8;transition:transform .18s var(--ease)}
+#rollM .prTg.on{background:#ff8a3d}
+#rollM .prTg.on i{transform:translateX(17px);background:#fff}
+#rollM .prRow:has(.prTg) .prL{flex:1}
+#rollM .prCol{flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#rollM .prSw,#rollM .prPick{width:22px;height:22px;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);cursor:pointer;padding:0;position:relative;overflow:hidden}
+#rollM .prSw.on{border-color:#fff}
+#rollM .prPick{background:conic-gradient(#ff5d5d,#ffd166,#7cff6b,#4fd1ff,#a78bfa,#ff5d8f,#ff5d5d)}
+#rollM .prPick::after{content:"+";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 3px #000}
+#rollM .prPick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#rollM .prBgs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#rollM .prBg{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px;border-radius:10px;border:1px solid #2a2d33;background:#141519;cursor:pointer;color:var(--muted);font:inherit}
+#rollM .prBg.on{border-color:#ff8a3d;color:var(--text);box-shadow:0 0 0 1px rgba(255,138,61,.35)}
+#rollM .prBgPv{width:100%;aspect-ratio:16/10;border-radius:7px;background:#000 center/cover;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+#rollM .prBgPv.cu{background:#101018}
+#rollM .prBgPv svg.i{width:18px;height:18px;color:#aab}
+#rollM .prBgN{font-size:10.5px;font-weight:700}
+#rollM .prReset{width:100%;justify-content:center;margin-top:12px}
+#rollM .prFoot{display:flex;align-items:center;gap:8px;padding:10px 16px max(12px,env(safe-area-inset-bottom));border-top:1px solid #23262c}
+#rollM .prInfo{font-size:11.5px;color:var(--muted);min-width:0}
+#rollM .prFoot .btn{min-width:96px;justify-content:center}
+#rollM .prFoot .btn svg.i{width:16px;height:16px}
+#rollM #prGo{background:linear-gradient(180deg,#ff9a4d,#f07a24);border-color:#ff9a4d;color:#1a0d04}
+#rollM #prGo:disabled{opacity:.55;cursor:progress}
+#rollM.rec .prSide,#rollM.rec .prTrans{pointer-events:none;opacity:.5}
+@media (max-width:860px){
+  #rollM{padding:0}
+  #rollM .prCard{height:100dvh;border-radius:0;border:none}
+  #rollM .prBody{flex-direction:column;overflow:auto}
+  #rollM .prMain{flex:none}
+  #rollM .prStage{height:min(56vw,46dvh);flex:none;padding:8px}
+  #rollM .prSide{width:auto;border-left:none;border-top:1px solid #23262c;overflow:visible;padding-bottom:28px}
+  #rollM .prInfo{display:none}
+}
+
+/* ───────── 스텝 입력: 보드 위아래 이동 · 음 길이 접기 ───────── */
+.siBoardBox{position:relative;display:flex;flex-direction:column;flex:1;min-height:0}
+#stepModal .siBoardBox{flex:1;min-height:0}
+.siVNav{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:none;flex-direction:column;gap:4px;z-index:5;pointer-events:none}
+.siVNav.show{display:flex}
+.siVNav .ib{pointer-events:auto;width:30px;height:30px;border-radius:9px;background:rgba(24,26,31,.88);border:1px solid #33363d;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.siVNav .ib:hover{border-color:var(--accentLine);color:var(--accent)}
+.siVNav .ib svg.i{width:16px;height:16px}
+#stepModal .siLenCtl{position:relative}
+#stepModal .siLenBtn{display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 9px 0 10px;border-radius:12px;border:1px solid #262930;background:#0f1013;color:var(--text);font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap}
+#stepModal .siLenBtn b{color:var(--accent);font-weight:800;min-width:26px;text-align:center}
+#stepModal .siLenBtn svg.i{width:15px;height:15px;color:var(--muted)}
+#stepModal .siLenBtn .chev{width:12px;height:12px;transition:transform .15s}
+#stepModal .siLenCtl.open .siLenBtn{border-color:var(--accentLine)}
+#stepModal .siLenCtl.open .siLenBtn .chev{transform:rotate(180deg)}
+#stepModal .siLenPop{position:fixed;z-index:200;display:none;padding:4px;border-radius:13px;background:rgba(26,28,33,.98);border:1px solid #33363d;box-shadow:0 12px 30px rgba(0,0,0,.55)}
+#stepModal .siLenCtl.open .siLenPop{display:block;animation:ddIn .14s cubic-bezier(.2,.8,.2,1)}
+#stepModal .siLenPop .atabs{display:flex;height:auto!important;border:none!important;background:none!important;padding:0!important}
+#stepModal .siLenPop .atab{padding:7px 12px!important;font-size:12.5px}
+@media (max-width:760px){#stepModal .siLenBtn{height:32px;padding:0 7px;font-size:12px}}
+#rollM #prGo,#rollM #prPlay{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:6px;white-space:nowrap}
+
+/* 피아노 롤 설정: 좌우로 넘치지 않게 */
+#rollM .prRow{min-width:0}
+#rollM .prSeg,#rollM .prSl,#rollM .prCol{min-width:0}
+#rollM .prSeg button{min-width:0;overflow:hidden;text-overflow:ellipsis;padding:5px 2px;font-size:11px;letter-spacing:-.2px}
+#rollM .prL{flex:0 0 64px}
+#rollM .prV{min-width:0;max-width:86px;white-space:nowrap;font-size:11px}
+#rollM .prCol{gap:5px}
+#rollM .prSw,#rollM .prPick{width:20px;height:20px;flex:none}
+#rollM .prBgs{gap:5px}
+#rollM{--accent2:#ff8a3d}
+
+/* ───────── 스크롤바: 테마에 맞게 (Chrome 121+는 scrollbar-width를 쓰면 기본 흰 막대가 나와서 웹킷 스타일만 써요) ───────── */
+#rollM .prSide::-webkit-scrollbar,#ddPop::-webkit-scrollbar,#rollM .prBody::-webkit-scrollbar{width:8px;height:0}
+#rollM .prSide::-webkit-scrollbar-thumb,#ddPop::-webkit-scrollbar-thumb,#rollM .prBody::-webkit-scrollbar-thumb{background:#33363e;border-radius:10px;border:2px solid transparent;background-clip:padding-box}
+#rollM .prSide::-webkit-scrollbar-thumb:hover,#ddPop::-webkit-scrollbar-thumb:hover{background:#4a4e57;border:2px solid transparent;background-clip:padding-box}
+#rollM .prSide::-webkit-scrollbar-thumb:active{background:#ff8a3d;border:2px solid transparent;background-clip:padding-box}
+#rollM .prSide::-webkit-scrollbar-track,#ddPop::-webkit-scrollbar-track{background:transparent}
+
+/* ───────── 슬라이더(range): 테마에 맞게 · 채워진 부분은 --p (JS가 값에 맞춰 넣어요) ───────── */
+input[type=range]{-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer;--rc:var(--accent);--p:50%;padding:0;margin:0;border:none}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:9px;background:linear-gradient(90deg,var(--rc) 0,color-mix(in srgb,var(--rc) 80%,#fff) var(--p),#2c2f36 var(--p),#2c2f36 100%);box-shadow:inset 0 1px 2px rgba(0,0,0,.45)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;margin-top:-5px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#fff 0,color-mix(in srgb,var(--rc) 35%,#fff) 45%,var(--rc) 100%);border:2px solid #15161a;box-shadow:0 0 0 1px color-mix(in srgb,var(--rc) 60%,transparent),0 2px 6px rgba(0,0,0,.5);transition:transform .12s,box-shadow .12s}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.12);box-shadow:0 0 0 1px var(--rc),0 0 10px color-mix(in srgb,var(--rc) 55%,transparent),0 2px 6px rgba(0,0,0,.5)}
+input[type=range]:active::-webkit-slider-thumb,input[type=range]:focus-visible::-webkit-slider-thumb{transform:scale(1.18);box-shadow:0 0 0 1px var(--rc),0 0 14px color-mix(in srgb,var(--rc) 70%,transparent)}
+input[type=range]::-moz-range-track{height:5px;border-radius:9px;background:#2c2f36}
+input[type=range]::-moz-range-progress{height:5px;border-radius:9px;background:var(--rc)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--rc);border:2px solid #15161a;box-shadow:0 0 0 1px var(--rc)}
+input[type=range]:disabled{opacity:.45;cursor:default}
+#rollM input[type=range]{--rc:#ff8a3d}
+@media (pointer:coarse){input[type=range]{height:28px}input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-7.5px}}
