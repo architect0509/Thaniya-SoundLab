@@ -3,6 +3,18 @@
 <head>
 <meta charset="utf-8">
 <link rel="icon" href="./Asset/icon.png" type="image/png">
+<link rel="manifest" href="./install/manifest.webmanifest">
+<meta name="theme-color" content="#0a0b0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SoundLab">
+<link rel="apple-touch-icon" href="./install/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./install/update/update-notifier.css">
+<script src="./install/update/app-version.js" defer></script>
+<script src="./install/update/update-notifier.js" defer></script>
+<script src="./install/install.js" defer></script>
+<link rel="stylesheet" href="./install/update/version-panel.css">
+<script src="./install/update/version-panel.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Thaniya-SoundLab</title>
 <link rel="stylesheet" href="app.css?v=20261124b">
@@ -412,6 +424,7 @@
       <button type="button" data-pg="play">재생 · 녹음</button>
       <button type="button" data-pg="keys">단축키</button>
       <button type="button" data-pg="about">정보</button>
+      <button type="button" data-pg="version">버전 정보</button>
       <div class="smNavFoot">
         <div class="smPair"><button type="button" class="smPairB" id="smTut"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></svg><span>튜토리얼</span></button><button type="button" class="smPairB" id="smKeyB"><span class="smKq">⌘</span><span>단축키</span></button></div>
         <div class="smApp"><b data-icon="logo" data-logo></b><div><strong>Thaniya-SoundLab</strong><span>작곡을 간단하게</span></div></div>
@@ -439,6 +452,9 @@
         <div class="smRow" data-q="튜토리얼 사용법 처음 tutorial"><div class="smL"><b>튜토리얼</b><p>처음 쓰는 법을 화면을 짚어 가며 다시 볼 수 있어요.</p></div><div class="smC smBtns"><button type="button" class="btn sm" id="smTutPc">PC 튜토리얼</button><button type="button" class="btn sm" id="smTutMob">모바일 튜토리얼</button></div></div>
         <div class="smRow" data-q="드럼 키트 타악기"><div class="smL"><b>드럼</b><p>드럼은 '드럼 키트' 악기 트랙으로 넣어요. 드럼 트랙을 고르면 건반 대신 타악기 이름이 보여요.</p></div></div>
         <div class="smRow" data-q="저장 브라우저 자동 저장"><div class="smL"><b>저장</b><p>곡과 설정은 이 브라우저에 자동으로 저장돼요. 다른 기기로 옮기려면 마이페이지에서 프로젝트 파일로 내보내세요.</p></div></div>
+      </section>
+      <section data-pg="version"><h2>버전 정보</h2>
+        <div id="tslVer"></div>
       </section>
       <div class="smEmpty" id="smEmpty">검색 결과가 없어요</div>
     </div>

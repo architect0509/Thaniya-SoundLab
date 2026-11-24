@@ -7,6 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thaniya-SoundLab - 작곡을 간단하게</title>
   <link rel="icon" href="./Asset/icon.png" type="image/png">
+  <link rel="manifest" href="./install/manifest.webmanifest">
+  <meta name="theme-color" content="#0a0b0d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SoundLab">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="./install/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./install/install.css">
+  <link rel="stylesheet" href="./install/update/update-notifier.css">
+  <script src="./install/update/app-version.js" defer></script>
+  <script src="./install/update/update-notifier.js" defer></script>
+  <script src="./install/install.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -508,6 +520,7 @@
       <div class="nav-links">
         <a href="#features" class="nav-link hide-sm">기능</a>
         <a href="#songs" class="nav-link hide-sm">내 곡</a>
+        <a href="#install" class="nav-link hide-sm">설치</a>
         <button class="btn btn-icon" id="homeFs" type="button" title="전체화면" aria-label="전체화면"></button>
         <a href="#" class="btn hide-sm" data-go="mypage"><span data-icon="user"></span>마이페이지</a>
         <a href="#" class="btn btn-primary" data-go="new"><span data-icon="plus"></span>새 곡</a>
@@ -627,6 +640,59 @@
       </div>
       <div class="song-grid" id="songGrid"></div>
       <div class="more-row"><a href="#" class="btn" data-go="mypage"><span data-icon="folder"></span>마이페이지에서 전체 관리 · 불러오기 · 내보내기</a></div>
+    </section>
+
+    <section id="install" class="tsi-wrap">
+      <div class="tsi-pc">
+        <div class="kicker">INSTALL · PC</div>
+        <h2 class="section-title">컴퓨터에 설치해서 사용하세요</h2>
+        <p class="tsi-sub">설치하면 브라우저 탭 없이 앱 창으로 바로 열리고, 인터넷이 없어도 열립니다. 새 버전이 나오면 프로그램에서 알려 드려요.</p>
+        <div class="tsi-grid">
+          <div class="tsi-card" data-os="windows">
+            <div class="tsi-head"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg><span class="tsi-name">Windows</span><span class="tsi-badge">내 기기</span></div>
+            <a href="#" class="btn tsi-btn">Windows용 내려받기 <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg></a>
+            <div class="tsi-meta">Windows 10 · 11 · Chrome · Edge에서 설치</div>
+          </div>
+          <div class="tsi-card" data-os="mac">
+            <div class="tsi-head"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg><span class="tsi-name">macOS</span><span class="tsi-badge">내 기기</span></div>
+            <a href="#" class="btn tsi-btn">macOS용 내려받기 <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg></a>
+            <div class="tsi-meta">macOS · Chrome · Edge, Safari는 Dock에 추가</div>
+          </div>
+          <div class="tsi-card" data-os="linux">
+            <div class="tsi-head"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 2.5-3 2.5"/><path d="M12.5 15h4.5"/></svg><span class="tsi-name">Linux</span><span class="tsi-badge">내 기기</span></div>
+            <a href="#" class="btn tsi-btn">Linux용 내려받기 <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg></a>
+            <div class="tsi-meta">Chrome · Chromium · Edge에서 설치</div>
+          </div>
+        </div>
+        <p class="tsi-warn" id="tsiWarn" hidden>처음 실행할 때 보안 경고가 뜨면 Windows는 ‘추가 정보 → 실행’, macOS는 Finder에서 앱을 우클릭한 뒤 ‘열기’를 눌러 주세요.</p>
+        <div class="tsi-note">
+          <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/></svg>
+          <div><b>휴대폰에도 설치할 수 있어요.</b> 휴대폰에서 <code id="tsiHost">이 사이트</code>를 열고 ‘휴대폰 홈 화면에 설치하세요’에서 설치하면 돼요. 만든 곡은 기기마다 따로 저장되니, 옮길 땐 마이페이지에서 프로젝트 파일로 내보내 주세요.</div>
+        </div>
+      </div>
+
+      <div class="tsi-mobile">
+        <div class="kicker">INSTALL · MOBILE</div>
+        <h2 class="section-title">휴대폰 홈 화면에 설치하세요</h2>
+        <p class="tsi-sub">설치하면 앱처럼 전체 화면으로 바로 열리고, 인터넷이 없어도 열립니다. 새 버전이 나오면 앱에서 알려 드려요.</p>
+        <ul class="tsi-checks">
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>홈 화면 아이콘으로 바로 열려요</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>주소창 없이 전체 화면으로 넓게 작곡할 수 있어요</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>새 버전이 나오면 알림이 뜨고, 누르면 바로 업데이트돼요</li>
+        </ul>
+        <div class="tsi-grid two">
+          <div class="tsi-card" data-os="android">
+            <div class="tsi-head"><svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg><span class="tsi-name">Android</span><span class="tsi-badge">내 기기</span></div>
+            <a href="#" class="btn tsi-btn">Android에 설치 <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg></a>
+            <div class="tsi-meta">Android 8 이상 · 설치 공간 거의 없음</div>
+          </div>
+          <div class="tsi-card" data-os="ios">
+            <div class="tsi-head"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M11 18h2"/></svg><span class="tsi-name">iPhone · iPad</span><span class="tsi-badge">내 기기</span></div>
+            <a href="#" class="btn tsi-btn">iPhone · iPad에 설치 <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 20h14"/></svg></a>
+            <div class="tsi-meta">iOS · iPadOS 16.4 이상 · Safari에서 설치</div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="cta">
