@@ -1376,15 +1376,17 @@ input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:
   #paneRec>span[style*="flex:1"],#paneSample>span[style*="flex:1"],#paneBeat>span[style*="flex:1"]{display:none}
   #paneRec .af,#paneSample .af,#paneBeat .af{flex-direction:column;align-items:stretch;gap:6px;min-width:0;font-size:11.5px;font-weight:700;color:#7d828c;white-space:normal}
   #accModal .abody select{width:100%;min-width:0;height:42px;border-radius:11px;padding:0 10px;font-size:14px;font-weight:700;background-color:#16181c;border-color:#2a2d34}
-  #paneRec .af:has(#accSrc),#paneSample .af:has(#accProg),#paneBeat .af:has(#btStart){grid-column:1/-1}
-  #paneRec .af:has(#accPer){grid-column:1/-1}
+  #paneRec .af:has(#accSrc){grid-column:1/-1}
+  #paneRec .akey{order:9}
+  #paneSample{grid-template-columns:minmax(0,.85fr) minmax(0,2fr)}
   /* '길이 [8] 마디': 고르는 칸 + 단위 한 줄 */
   #accModal .afIn{display:flex;align-items:center;gap:8px;min-width:0}
   #accModal .afIn select{flex:1}
   #accModal .afU{flex:none;font-size:12.5px;color:#9aa0aa;font-weight:700}
   #accModal .akey{grid-column:1/-1;font-size:12px;line-height:1.45;padding:9px 11px;border-radius:11px;background:#16181c;border:1px solid #23262c;color:#c9ccd2}
   #accModal .akey:empty{display:none}
-  #paneBeat .chk{grid-column:1/-1}
+  #paneBeat .chk{height:42px;padding:0 12px;border-radius:11px;border:1px solid #2a2d34;background:#16181c;font-size:13px;font-weight:700;color:#c9ccd2;gap:8px}
+  #paneBeat .chk:has(:checked){border-color:var(--accentLine);background:var(--accentDim);color:var(--accent)}
   /* 코드 · 마디 칩 */
   #accTimeline{scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
   #accTimeline::-webkit-scrollbar{display:none}
@@ -1451,7 +1453,9 @@ input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:
   #accModal #accClose{width:38px;height:38px}
   #accModal .abody{padding:10px 12px 14px;gap:14px}
   #paneRec,#paneSample,#paneBeat{grid-template-columns:repeat(4,minmax(0,1fr))}
-  #paneRec .af:has(#accSrc),#paneSample .af:has(#accProg),#paneBeat .af:has(#btStart),#paneRec .af:has(#accPer){grid-column:span 2}
+  #paneRec .af:has(#accSrc),#paneSample .af:has(#accProg){grid-column:span 2}
+  #paneSample .af:has(#accSKey){grid-column:span 2}
+  #accModal .rgCtl{grid-column:1/-1}
   #accModal .abody select{height:38px}
   #accParts{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,2fr)}
   #accParts .af:has(#accGain){grid-column:auto}
@@ -2045,3 +2049,64 @@ input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;bac
 input[type=range]:disabled{opacity:.45;cursor:default}
 #rollM input[type=range]{--rc:#ff8a3d}
 @media (pointer:coarse){input[type=range]{height:28px}input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-7.5px}}
+
+
+/* ───────── 1.0.1 · 반주 · 비트 설정 줄 정리 + 구간(곡 전체 / 직접 지정) ───────── */
+/* PC: 설정 줄을 한 장의 카드로 · 칸 높이를 맞추고 빈 칸 없이 */
+#paneRec,#paneSample,#paneBeat{gap:10px 18px;padding:10px 12px;border-radius:12px;background:#0e0f12;border:1px solid #23262c}
+#paneRec>span[style*="flex:1"],#paneSample>span[style*="flex:1"],#paneBeat>span[style*="flex:1"]{flex:1 1 0;min-width:0}
+#accModal .arow .af{font-size:11.5px;font-weight:700;color:#7d828c}
+#accModal .arow select{height:32px;border-radius:9px;padding:0 8px;font-weight:700}
+#accModal .akey:empty{display:none}
+#accModal .akey{padding:6px 10px;border-radius:9px;background:#16181c;border:1px solid #23262c;line-height:1.35}
+#paneBeat .chk{height:32px;padding:0 10px;border-radius:9px;border:1px solid #2a2d34;background:#16181c;color:#c9ccd2;font-weight:700}
+#paneBeat .chk:has(:checked){border-color:var(--accentLine);background:var(--accentDim);color:var(--accent)}
+#accModal .abody{gap:12px}
+/* 구간 컨트롤 */
+.rgCtl{gap:8px}
+.rgCtl .rgCap{font-size:11.5px;font-weight:700;color:#7d828c}
+.rgSeg{display:flex;gap:3px;padding:3px;border-radius:10px;background:#16181c;border:1px solid #2a2d34}
+.rgOpt{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:26px;padding:0 11px;border:1px solid transparent;border-radius:7px;background:transparent;color:#8a8f99;font:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+.rgOpt:hover{color:var(--text)}
+.rgOpt.on{background:var(--accentDim);border-color:var(--accentLine);color:var(--accent)}
+.rgOpt svg.i{width:13px;height:13px}
+.rgInfo{font:700 11.5px ui-monospace,Menlo,monospace;color:#c9ccd2;padding:0 2px;white-space:nowrap}
+.rgInfo.edit{color:var(--accent);cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+@media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #accModal .rgCtl{grid-column:1/-1;display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"cap info" "seg seg";gap:6px 8px;align-items:center}
+  #accModal .rgCtl .rgCap{grid-area:cap}
+  #accModal .rgCtl .rgInfo{grid-area:info;font-size:12px}
+  #accModal .rgSeg{grid-area:seg;height:42px;padding:4px;border-radius:12px}
+  #accModal .rgOpt{flex:1 1 0;min-width:0;height:auto;border-radius:9px;font-size:13px}
+  #paneRec,#paneSample,#paneBeat{gap:12px 10px}
+}
+@media (max-width:760px) and (max-height:520px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #accModal .rgCtl{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"cap seg info"}
+  #accModal .rgSeg{height:38px}
+}
+
+/* 구간 지정 화면 (편집 화면 보드에서 마디 고르기) */
+#rangeBar{display:none;position:fixed;left:50%;transform:translateX(-50%);width:min(560px,calc(100vw - 16px));bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:86;align-items:center;gap:8px;padding:8px;border-radius:16px;
+  background:linear-gradient(180deg,#23262c,#17181c);border:1px solid var(--accentLine);box-shadow:0 10px 30px rgba(0,0,0,.6),var(--glow)}
+body.rangePick #rangeBar{display:flex}
+#rangeBar .rgTx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+#rangeBar .rgTx b{color:var(--accent);font-size:11px}
+#rangeBar #rgPos{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rangeBar small{color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rangeBar .btn{padding:0 12px;height:42px;justify-content:center;white-space:nowrap;border-radius:12px}
+#rangeBar #rgCancel{width:42px;padding:0}
+#rangeBar #rgOk{padding:0 18px;font-weight:800;gap:6px}
+body.rangePick #rulerWrap{box-shadow:0 0 0 2px var(--accent) inset}
+body.rangePick #rollWrap,body.rangePick #rulerWrap{cursor:crosshair;touch-action:none}
+body.rangePick #rollWrap *,body.rangePick #rulerWrap *{cursor:inherit!important}   /* 안쪽 보드 · 캔버스의 도구 커서 대신 구간 커서 */
+body.rangePick.rgEdge #rollWrap,body.rangePick.rgEdge #rulerWrap{cursor:ew-resize}
+body.rangePick #scroller{touch-action:none}
+body.rangePick #rollPad,body.rangePick #linkHint,body.rangePick #pasteBadge{display:none!important}
+body.rangePick #palette{visibility:hidden!important}
+
+/* 스텝 입력: 손 도구 */
+#stepModal.siHandOn #siBoardWrap{border-color:var(--accentLine)}
+#stepModal.siHandOn #siBoard{cursor:grab}
+@media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #stepModal .mhead #siHandTool{display:inline-flex}
+}

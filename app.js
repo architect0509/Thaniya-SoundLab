@@ -1944,7 +1944,7 @@ function layout() {
   drawAll();
 }
 function requestDraw() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; drawAll(); }); }
-function drawAll() { drawRoll(); drawKeys(); drawRuler(); updatePos(); if (typeof updateTimelineHead === 'function') updateTimelineHead(); $('selInfo').textContent = sel.size ? `선택 ${sel.size}개` : ''; rollSelUI(); }
+function drawAll() { drawRoll(); drawKeys(); drawRuler(); if (typeof drawRangeOv === 'function') drawRangeOv(); updatePos(); if (typeof updateTimelineHead === 'function') updateTimelineHead(); $('selInfo').textContent = sel.size ? `선택 ${sel.size}개` : ''; rollSelUI(); }
 // ── 선택한 노트 위 '옮기기' 컨트롤러(모바일) + 여러 개 선택 시 아래쪽 '이어 부르기' 안내 ──
 const RP = { open: false, fixed: false, hide: false };   // hide = 방금 펜으로 새로 그린 노트(이미 있던 노트를 눌렀을 때만 컨트롤러)
 function rpMobile() { return innerWidth <= 760 || (matchMedia('(pointer:coarse)').matches && innerHeight <= 520 && innerWidth > innerHeight); }
@@ -3191,16 +3191,17 @@ function recommendBeat() {
   if (insts.has('medieval')) return 'medi';
   const b = S.bpm; return b < 85 ? 'lofi' : b < 100 ? 'boombap' : b < 118 ? 'pop' : b < 128 ? 'house' : b < 140 ? 'rock' : 'trap';
 }
-function beatRange() {
-  const mode = $('btStart').value, n = +$('btBars').value;
+// ── 반주 · 비트 구간: 기본 = 곡 전체 길이에 맞춰 · 직접 지정 = 편집 화면에서 마디로 시작 ~ 끝 고르기 ──
+function songBars() {   // 곡 전체: 비트 트랙을 뺀 노트가 있는 첫 마디 ~ 마지막 마디 (a 포함 · b 제외, 마디 번호는 0부터)
   const BR = BAR();
-  let start = Math.floor(playhead / BR) * BR;
-  if (mode === 'song') start = 0;
-  if (mode === 'notes') { const ns = S.notes.filter(n => !trk(n.t).beat); if (ns.length) { start = Math.floor(Math.min(...ns.map(n => n.s)) / BR) * BR; } }
-  let bars = n;
-  if (mode === 'notes') { const ns = S.notes.filter(x => !trk(x.t).beat); if (ns.length) bars = Math.max(1, Math.ceil(Math.max(...ns.map(x => x.s + x.l)) / BR) - start / BR); }
-  return { start, bars };
+  let ns = S.notes.filter(n => { const t = trk(n.t); return t && !t.beat && !t.accomp; });
+  if (!ns.length) ns = S.notes.filter(n => { const t = trk(n.t); return t && !t.beat; });
+  if (!ns.length) return { a: 0, b: 8 };
+  let lo = Infinity, hi = 0; for (const n of ns) { lo = Math.min(lo, n.s); hi = Math.max(hi, n.s + n.l); }
+  const a = Math.floor(lo / BR); return { a, b: Math.max(a + 1, Math.ceil(hi / BR)) };
 }
+function accBars() { const r = acc.range; return r && r.custom ? { a: r.a, b: r.b } : songBars(); }
+function beatRange() { const { a, b } = accBars(); return { start: a * BAR(), bars: b - a }; }
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function genBeat() {
   const { start, bars } = beatRange(), every = +$('btFill').value, sw = +$('btSwing').value, gain = +$('btGain').value, hum = +$('btHuman').value;
@@ -3284,7 +3285,6 @@ function renderBeatTimeline() {
     cell.title = '눌러서 이 패턴 편집'; cell.onclick = () => { bt.edit = fill ? 'B' : 'A'; renderSeq(); };
     row.appendChild(cell);
   }
-  $('btInfo').textContent = `${start / BAR() + 1}~${start / BAR() + bars}마디 (${bars}마디 · ${S.ts}/4박자)`;
   syncTimelineFromEditor();
 }
 function syncTimelineFromEditor() {
@@ -3308,7 +3308,7 @@ function updateTimelineHead() {
 
 // ───────── 반주 창 ─────────
 const accM = $('accModal');
-const acc = { tab: 'rec', key: { t: 0, minor: false, conf: 0 }, segs: [], style: 'ballad', rec: 'ballad' };
+const acc = { tab: 'rec', key: { t: 0, minor: false, conf: 0 }, segs: [], style: 'ballad', rec: 'ballad', range: { custom: false, a: 0, b: 8 } };
 const keyVal = k => `${k.t}:${k.minor ? 1 : 0}`;
 (() => {
   for (let t = 0; t < 12; t++) for (const m of [0, 1]) $('accKey').add(new Option(keyName({ t, minor: !!m }), `${t}:${m}`));
@@ -3325,6 +3325,7 @@ function openAccomp() {
   if (!cands.length) s.add(new Option('멜로디가 있는 트랙이 없어요', ''));
   const at = activeTrack(); if (cands.includes(at)) s.value = at.id;
   $('accSKey').value = String(S.key !== 'off' ? +S.key : 0);
+  acc.range = { custom: false, ...songBars() };   // 열 때마다 기본 = 곡 전체 길이에 맞춰
   accM.classList.add('show');
   setAccTab(cands.length ? 'rec' : 'sample');
 }
@@ -3338,6 +3339,8 @@ function setAccTab(tab) {
   $('paneBeat').style.display = isBeat ? '' : 'none'; $('beatSec').style.display = isBeat ? '' : 'none'; $('accParts').style.display = isBeat ? 'none' : '';
   $('tlTitle').innerHTML = isBeat ? '마디별 패턴 <span class="mhint">· 마디를 누르면 그 패턴(기본/필인)을 편집해요 · 편집 화면과 같이 스크롤돼요</span>' : '코드 진행 <span class="mhint">· 칩을 눌러 마디마다 코드를 바꿀 수 있어요 · 편집 화면과 같이 스크롤돼요</span>';
   $('accOk').textContent = isBeat ? '비트 추가' : '반주 추가';
+  { const pane = $(tab === 'rec' ? 'paneRec' : tab === 'sample' ? 'paneSample' : 'paneBeat'); pane.prepend($('rgCtl')); }
+  rgRenderCtl();
   $('accChords').innerHTML = ''; $('accBeatRow').innerHTML = '';
   if (isBeat) { if (!bt.loaded) { loadBeatPreset(recommendBeat()); bt.loaded = true; } bt.seed = (Math.random() * 1e9) | 0; renderBeatStyles(); renderSeq(); renderBeatTimeline(); updateAccSum(); return; }
   if (tab === 'rec') analyzeRec(false); else buildSample();
@@ -3351,14 +3354,17 @@ function analyzeRec(keepKey) {
   if (!keepKey) { acc.key = detectKey(ns); $('accKey').value = keyVal(acc.key); }
   const per = $('accPer').value;
   acc.segs = analyzeChords(ns, acc.key, per === 'auto' ? 'auto' : +per);
+  if (acc.range && acc.range.custom) {   // 직접 지정한 구간 안의 코드만 (걸친 코드는 구간에 맞게 잘라요)
+    const A = acc.range.a * BAR(), B = acc.range.b * BAR();
+    acc.segs = acc.segs.filter(sg => sg.e > A && sg.s < B).map(sg => ({ ...sg, s: Math.max(sg.s, A), e: Math.min(sg.e, B) }));
+  }
   $('accKeyInfo').innerHTML = keepKey ? `조: <b>${keyName(acc.key)}</b>` : `추정 조: <b>${keyName(acc.key)}</b> · 확신 ${Math.round(acc.key.conf * 100)}%`;
 }
 function buildSample() {
-  const prog = PROGS.find(p => p.id === $('accProg').value) || PROGS[0], t = +$('accSKey').value, n = prog.id === 'blues' ? Math.max(12, +$('accBars').value) : +$('accBars').value;
+  const prog = PROGS.find(p => p.id === $('accProg').value) || PROGS[0], t = +$('accSKey').value, rg = accBars(), n = rg.b - rg.a;
   acc.key = { t, minor: prog.minor, conf: 1 };
-  const BR = BAR(), start = Math.floor(playhead / BR) * BR;
+  const BR = BAR(), start = rg.a * BR;
   acc.segs = Array.from({ length: n }, (_, i) => { const [d, q] = prog.ch[i % prog.ch.length]; return { s: start + i * BR, e: start + i * BR + BR, chord: { r: (t + d) % 12, q } }; });
-  $('accStartInfo').textContent = `${Math.floor(start / BR) + 1}마디부터 (재생 위치) · ${keyName(acc.key)}`;
   acc.rec = { pop: 'pop', ballad: 'ballad', canon: 'orch', fifties: 'kids', royal: 'chip', jazz: 'lofi', blues: 'band', epic: 'orch', medi: 'medieval', sad: 'ballad' }[prog.id] || 'ballad';
 }
 function chordOptions(sel, cur) {
@@ -3384,7 +3390,7 @@ function renderChords() {
     sel.addEventListener('change', () => { sg.chord = sel.value === 'nc' ? null : { r: +sel.value.split(':')[0], q: sel.value.split(':')[1] }; rm.textContent = roman(sg.chord, acc.key); updateAccSum(); sel.blur(); });
     box.appendChild(ch);
   });
-  syncTimelineFromEditor(); updateAccSum();
+  syncTimelineFromEditor(); updateAccSum(); rgRenderCtl();
 }
 function renderAccStyles() {
   const row = $('accStyles'); row.innerHTML = '';
@@ -3485,7 +3491,7 @@ function accCommit() {
 }
 accM.querySelectorAll('.atab[data-tab]').forEach(b => b.addEventListener('click', () => setAccTab(b.dataset.tab)));
 accM.querySelectorAll('[data-pat]').forEach(b => b.addEventListener('click', () => { bt.edit = b.dataset.pat; renderSeq(); }));
-['btStart', 'btBars', 'btFill'].forEach(id => $(id).addEventListener('change', e => { e.target.blur(); renderBeatTimeline(); updateAccSum(); }));
+['btFill'].forEach(id => $(id).addEventListener('change', e => { e.target.blur(); renderBeatTimeline(); updateAccSum(); }));
 ['btSwing', 'btGain', 'btHuman'].forEach(id => $(id).addEventListener('input', () => { btLabels(); updateAccSum(); }));
 $('btCrash').addEventListener('change', updateAccSum);
 $('btClear').onclick = () => { bt[bt.edit] = emptyPat(); renderSeq(); renderBeatTimeline(); updateAccSum(); };
@@ -3496,7 +3502,7 @@ scroller.addEventListener('scroll', syncTimelineFromEditor);
 $('accSrc').addEventListener('change', e => { e.target.blur(); analyzeRec(false); acc.rec = recommendStyle(accSrcTrack()); acc.style = acc.rec; renderAccStyles(); renderChords(); });
 $('accPer').addEventListener('change', e => { e.target.blur(); analyzeRec(true); renderChords(); });
 $('accKey').addEventListener('change', e => { e.target.blur(); const [t, m] = e.target.value.split(':'); acc.key = { t: +t, minor: m === '1', conf: 1 }; analyzeRec(true); renderChords(); });
-['accSKey', 'accProg', 'accBars'].forEach(id => $(id).addEventListener('change', e => { e.target.blur(); buildSample(); acc.style = acc.rec; renderAccStyles(); renderChords(); }));
+['accSKey', 'accProg'].forEach(id => $(id).addEventListener('change', e => { e.target.blur(); buildSample(); acc.style = acc.rec; renderAccStyles(); renderChords(); }));
 accM.querySelectorAll('[data-part]').forEach(cb => cb.addEventListener('change', updateAccSum));
 $('accGain').addEventListener('input', updateAccSum);
 $('accStyles').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); $('accStyles').scrollLeft += e.deltaY; } }, { passive: false });
@@ -3507,6 +3513,148 @@ $('accCancel').onclick = closeAccomp;
 $('accClose').onclick = closeAccomp;
 accM.addEventListener('pointerdown', e => { if (e.target === accM) closeAccomp(); });
 $('accBtn').onclick = openAccomp;
+
+// ── 구간 컨트롤 (반주 · 비트 창) ──
+function rgRenderCtl() {
+  const custom = !!(acc.range && acc.range.custom);
+  let { a, b } = accBars();
+  if (!custom && acc.tab === 'rec' && acc.segs.length) { a = Math.floor(acc.segs[0].s / BAR()); b = Math.ceil(acc.segs[acc.segs.length - 1].e / BAR()); }   // 추천 반주: 멜로디가 있는 마디
+  $('rgCtl').querySelectorAll('[data-rg]').forEach(x => { const on = (x.dataset.rg === 'custom') === custom; x.classList.toggle('on', on); x.setAttribute('aria-checked', on); });
+  $('rgInfo').textContent = `${a + 1}~${b}마디 · ${b - a}마디`;
+  $('rgInfo').classList.toggle('edit', custom);
+  $('rgInfo').title = custom ? '눌러서 구간 다시 고르기' : '';
+}
+function accRangeChanged() {
+  rgRenderCtl();
+  if (acc.tab === 'beat') { renderBeatTimeline(); updateAccSum(); return; }
+  if (acc.tab === 'rec') analyzeRec(true); else buildSample();
+  renderChords();
+}
+$('rgCtl').querySelectorAll('[data-rg]').forEach(x => x.addEventListener('click', () => {
+  if (x.dataset.rg === 'custom') { rgStartPick(); return; }   // 직접 지정 = 편집 화면(보드)에서 고르기 (이미 직접 지정이어도 다시 고르기)
+  if (!acc.range.custom) return;
+  acc.range = { custom: false, ...songBars() }; accRangeChanged();
+}));
+$('rgInfo').addEventListener('click', () => { if (acc.range.custom) rgStartPick(); });
+
+// ── 구간 지정 화면: 반주 창을 잠깐 숨기고 편집 화면 보드에서 마디 단위로 시작 ~ 끝을 끌어서 고른 뒤 「확인」 ──
+var RG = { on: false, a: 0, b: 8, drag: null, dims: [], t: 0, ex: null };
+const rgBarW = () => BAR() * STEP_W;
+function rgLayoutDims() {   // 눈금자 + 보드만 밝게, 나머지(메뉴 · 패널)는 어둡게 막아요
+  const r1 = $('rulerWrap').getBoundingClientRect(), r2 = $('rollWrap').getBoundingClientRect(), W = innerWidth, H = innerHeight;
+  const L = Math.min(r1.left, r2.left), R = Math.max(r1.right, r2.right), T = r1.top, B = r2.bottom;
+  const box = [[0, 0, W, T], [0, B, W, H - B], [0, T, L, B - T], [R, T, W - R, B - T]];
+  RG.dims.forEach((d, i) => { const [x, y, w, h] = box[i]; Object.assign(d.style, { left: x + 'px', top: y + 'px', width: Math.max(0, w) + 'px', height: Math.max(0, h) + 'px' }); });
+}
+function rgText() { $('rgPos').textContent = `${RG.a + 1}마디 → ${RG.b}마디 · ${RG.b - RG.a}마디`; }
+function rgStartPick() {
+  if (mode !== 'idle') stop();
+  const { a, b } = accBars(); RG.a = a; RG.b = b; RG.drag = null; RG.on = true;
+  accM.classList.remove('show'); closeCtx();
+  document.body.classList.add('rangePick');
+  RG.dims = [0, 1, 2, 3].map(() => { const d = document.createElement('div'); d.className = 'placeDim rgDim'; d.addEventListener('pointerdown', e => e.preventDefault()); document.body.appendChild(d); return d; });
+  rgLayoutDims(); window.addEventListener('resize', rgLayoutDims);
+  ensureLength(RG.b * BAR() + BAR());
+  {   // 곡 전체가 한눈에 보이게 잠깐 가로로 축소 (끝나면 원래 확대로 되돌려요)
+    const song = songBars(), span = Math.max(song.b, RG.b) - Math.min(song.a, RG.a) + 2, fit = scroller.clientWidth / (span * BAR());
+    RG.zoom = { x: STEP_W, y: ROW_H, sl: scroller.scrollLeft, st: scroller.scrollTop };
+    if (fit < STEP_W) setZoom(Math.max(4, Math.min(STEP_W, fit)), ROW_H, 0);
+    else RG.zoom.keep = true;
+  }
+  const x0 = RG.a * rgBarW(), x1 = RG.b * rgBarW(), vwid = scroller.clientWidth;   // 고른 구간이 보이게
+  if (x0 < scroller.scrollLeft || x1 > scroller.scrollLeft + vwid) scroller.scrollLeft = Math.max(0, x1 - x0 < vwid ? (x0 + x1) / 2 - vwid / 2 : x0 - 24);
+  rgText(); drawAll();
+}
+function rgEndPick(ok) {
+  if (!RG.on) return;
+  RG.on = false; RG.drag = null; clearInterval(RG.t);
+  document.body.classList.remove('rangePick', 'rgEdge');
+  RG.dims.forEach(d => d.remove()); RG.dims = []; window.removeEventListener('resize', rgLayoutDims);
+  if (RG.zoom) { const z = RG.zoom; RG.zoom = null; if (!z.keep) { setZoom(z.x, z.y, 0); scroller.scrollLeft = z.sl; scroller.scrollTop = z.st; } }
+  drawAll();
+  if (ok) acc.range = { custom: true, a: RG.a, b: RG.b };
+  accM.classList.add('show');
+  if (ok) { accRangeChanged(); toast(`${RG.a + 1}~${RG.b}마디로 정했어요`); } else rgRenderCtl();
+}
+$('rgCancel').onclick = () => rgEndPick(false);
+$('rgOk').onclick = () => rgEndPick(true);
+$('rgAll').onclick = () => { const r = songBars(); RG.a = r.a; RG.b = r.b; rgText(); drawAll(); };
+function rgBarAt(clientX, round) {
+  const r = scroller.getBoundingClientRect(), x = clientX - r.left + scroller.scrollLeft, w = rgBarW();
+  return Math.max(0, round ? Math.round(x / w) : Math.floor(x / w));
+}
+function rgMove(clientX) {
+  const d = RG.drag; if (!d) return;
+  if (d.kind === 'a') RG.a = Math.min(rgBarAt(clientX, true), RG.b - 1);
+  else if (d.kind === 'b') RG.b = Math.max(rgBarAt(clientX, true), RG.a + 1);
+  else { const k = rgBarAt(clientX); RG.a = Math.min(d.anchor, k); RG.b = Math.max(d.anchor, k) + 1; }
+  ensureLength(RG.b * BAR() + BAR());
+  rgText(); drawAll();
+}
+['rulerWrap', 'rollWrap'].forEach(id => {
+  const host = $(id);
+  host.addEventListener('pointerdown', e => {
+    if (!RG.on) return;
+    e.preventDefault(); e.stopPropagation();
+    if (RG.drag || e.button === 2) return;
+    const r = scroller.getBoundingClientRect(), x = e.clientX - r.left + scroller.scrollLeft, w = rgBarW(), grab = e.pointerType === 'touch' ? 22 : 12;
+    const da = Math.abs(x - RG.a * w), db = Math.abs(x - RG.b * w);
+    RG.drag = { id: e.pointerId, kind: db <= grab && db <= da ? 'b' : da <= grab ? 'a' : 'new', anchor: rgBarAt(e.clientX), x: e.clientX };
+    document.body.classList.toggle('rgEdge', RG.drag.kind !== 'new');   // 끝을 끄는 동안엔 ↔ 커서 유지
+    try { host.setPointerCapture(e.pointerId); } catch (_) {}
+    if (RG.drag.kind === 'new') rgMove(e.clientX);
+    clearInterval(RG.t);
+    RG.t = setInterval(() => {   // 보드 끝으로 끌면 화면이 따라가요
+      if (!RG.drag) return;
+      const rr = scroller.getBoundingClientRect(), cx = RG.drag.x;
+      if (cx < rr.left + 36) scroller.scrollLeft -= 12;
+      else if (cx > rr.right - 36) { if (scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 4) ensureLength((scroller.scrollLeft + scroller.clientWidth) / STEP_W + 16); scroller.scrollLeft += 12; }
+      else return;
+      rgMove(cx);
+    }, 40);
+  }, true);
+  host.addEventListener('pointermove', e => {
+    if (!RG.on) return;
+    e.stopPropagation();
+    if (RG.drag && RG.drag.id === e.pointerId) { RG.drag.x = e.clientX; rgMove(e.clientX); return; }
+    if (RG.drag) return;
+    const r = scroller.getBoundingClientRect(), x = e.clientX - r.left + scroller.scrollLeft, w = rgBarW();
+    document.body.classList.toggle('rgEdge', Math.min(Math.abs(x - RG.a * w), Math.abs(x - RG.b * w)) <= 12);   // 늘릴 수 있는 끝 = ↔ 커서
+  }, true);
+  const up = e => { if (!RG.on) return; e.stopPropagation(); if (RG.drag && RG.drag.id === e.pointerId) { RG.drag = null; clearInterval(RG.t); drawAll(); } };
+  host.addEventListener('pointerleave', () => { if (RG.on && !RG.drag) document.body.classList.remove('rgEdge'); });
+  host.addEventListener('pointerup', up, true); host.addEventListener('pointercancel', up, true);
+  ['click', 'dblclick', 'contextmenu'].forEach(ev => host.addEventListener(ev, e => { if (RG.on) { e.preventDefault(); e.stopPropagation(); } }, true));
+});
+window.addEventListener('keydown', e => {   // 구간 지정 중: Esc 취소 · Enter 확인 · 나머지 편집 단축키는 막아요
+  if (!RG.on) return;
+  if (e.key === 'Escape') rgEndPick(false); else if (e.key === 'Enter') rgEndPick(true);
+  else if (!(e.ctrlKey || e.metaKey)) { e.preventDefault(); }
+  e.stopImmediatePropagation();
+}, true);
+function drawRangeOv() {   // 고른 구간: 밖은 어둡게 · 안은 노란 테두리와 양 끝 손잡이
+  if (!RG || !RG.on) return;
+  const w = rgBarW(), sx = scroller.scrollLeft;
+  const xa = RG.a * w - sx, xb = RG.b * w - sx;
+  { const c = rctx; c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rollCv.width / dpr, H = rollCv.height / dpr;
+    c.fillStyle = 'rgba(6,7,9,.62)';
+    if (xa > 0) c.fillRect(0, 0, Math.min(xa, W), H);
+    if (xb < W) c.fillRect(Math.max(0, xb), 0, W - Math.max(0, xb), H);
+    c.fillStyle = 'rgba(242,194,48,.08)'; c.fillRect(xa, 0, xb - xa, H);
+    c.fillStyle = '#f2c230'; c.fillRect(Math.round(xa) - 1, 0, 2, H); c.fillRect(Math.round(xb) - 1, 0, 2, H);
+    const hy = H / 2;
+    [xa, xb].forEach(x => { c.beginPath(); c.roundRect ? c.roundRect(x - 6, hy - 22, 12, 44, 6) : c.rect(x - 6, hy - 22, 12, 44); c.fill();
+      c.fillStyle = '#1a1405'; c.fillRect(x - 2, hy - 8, 1.5, 16); c.fillRect(x + 0.5, hy - 8, 1.5, 16); c.fillStyle = '#f2c230'; });
+    const lab = `${RG.a + 1}~${RG.b}마디`; c.font = '800 12px system-ui, sans-serif'; c.textBaseline = 'middle';
+    const tw = c.measureText(lab).width + 16, lx = Math.max(4, Math.min(W - tw - 4, (xa + xb) / 2 - tw / 2));
+    c.fillStyle = '#f2c230'; c.beginPath(); c.roundRect ? c.roundRect(lx, 8, tw, 22, 11) : c.rect(lx, 8, tw, 22); c.fill();
+    c.fillStyle = '#1a1405'; c.fillText(lab, lx + 8, 19.5); }
+  { const c = uctx; c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const H = rulerCv.height / dpr;
+    c.fillStyle = 'rgba(242,194,48,.30)'; c.fillRect(xa, 0, xb - xa, H);
+    c.fillStyle = '#f2c230'; c.fillRect(xa, H - 3, xb - xa, 3); }
+}
 
 // ───────── 스텝 입력 (Musical Typing) — 컴퓨터 키보드로 건반 연주 · 임시 보드에 쌓아서 내보내기 ─────────
 // 창이 열려 있는 동안에는 모든 키 입력을 이 창이 가져가요 (다른 단축키는 동작하지 않음).
@@ -3537,7 +3685,7 @@ const SI = {
   notes: [], cursor: 0, pending: [], held: new Map(), sel: new Set(), undo: [], redo: [],
   remap: false, wait: null, drag: null, pan: null, span: 0, geo: null, playT: null, playing: false,
   steps: [], cur: 0, playIdx: -1, exBundle: false,
-  metro: false, selTool: false, box: null, padOpen: false, rul: null, clip: null, paste: null
+  metro: false, selTool: false, handTool: false, box: null, padOpen: false, rul: null, clip: null, paste: null
 };
 (() => {
   const o = lsGet(SI_KEY);
@@ -4199,7 +4347,15 @@ function siSelVisible() {   // 옮긴 노트가 화면 밖으로 나가면 보�
   if (x0 < w.scrollLeft + 10) w.scrollLeft = Math.max(0, x0 - 40);
   else if (x1 > w.scrollLeft + w.clientWidth - 10) w.scrollLeft = x1 - w.clientWidth + 40;
 }
+function siSetHandTool(on, quiet) {   // 손 도구: 보드를 끌면 화면만 이동 (노트 칠하기 · 옮기기 · 선택 없음)
+  SI.handTool = !!on; $('siHandTool').classList.toggle('on', SI.handTool); stepM.classList.toggle('siHandOn', SI.handTool);
+  if (SI.handTool && SI.selTool) { SI.selTool = false; $('siSelTool').classList.remove('on'); stepM.classList.remove('siSelOn'); SI.box = null; SI.padOpen = false; if (SI.sel.size) SI.sel = new Set(); }
+  $('siBoard').style.cursor = SI.handTool ? 'grab' : '';
+  siDraw();
+  if (!quiet) toast(SI.handTool ? '손 도구 — 보드를 끌어서 화면을 옮겨요 (위아래 · 좌우)' : '손 도구를 껐어요');
+}
 function siSetSelTool(on) {
+  if (on && SI.handTool) siSetHandTool(false, true);
   SI.selTool = !!on; $('siSelTool').classList.toggle('on', SI.selTool); stepM.classList.toggle('siSelOn', SI.selTool);
   SI.box = null; SI.padOpen = false;
   if (!SI.selTool && SI.sel.size) SI.sel = new Set();
@@ -4230,6 +4386,11 @@ $('siBoard').addEventListener('pointerdown', e => {
     if (SI.paste.drag) return;
     SI.paste.drag = { id: e.pointerId, x0: x, at0: SI.paste.at, cx: e.clientX, moved: false };
     $('siBoard').setPointerCapture(e.pointerId); return;
+  }
+  if (SI.handTool) {   // 손 도구: 어디를 잡든 화면만 밀어요 (마우스 · 터치 모두)
+    if (SI.pan) return;
+    SI.pan = { id: e.pointerId, cx: e.clientX, cy: e.clientY, sl: $('siBoardWrap').scrollLeft, vh: SI.vHi ?? (SI.geo && SI.geo.hi), x, y, moved: false, n: null, hand: true };
+    $('siBoard').style.cursor = 'grabbing'; $('siBoard').setPointerCapture(e.pointerId); return;
   }
   if (SI.selTool) {   // 선택 도구(PC·모바일): 노트 톡/클릭 = 고르기 · 빈 곳 끌기 = 사각형으로 여러 개 · 고른 노트 끌기 = 옮기기
     if (SI.box || SI.drag) return;   // 이미 다른 손가락이 쓰는 중
@@ -4292,7 +4453,7 @@ $('siBoard').addEventListener('pointermove', e => {
   }
   if (SI.pan && SI.pan.id === e.pointerId) {
     const pn = SI.pan, dx = e.clientX - pn.cx, dy = e.clientY - pn.cy;
-    if (!pn.moved && Math.hypot(dx, dy) > 8) {
+    if (!pn.moved && Math.hypot(dx, dy) > (pn.hand ? 3 : 8)) {
       pn.moved = true;
       if (pn.n) {   // 노트를 잡고 끌기 → 옮기기
         SI.pan = null; SI.sel = new Set([pn.n]); siPlayP(pn.n.p);
@@ -4303,7 +4464,7 @@ $('siBoard').addEventListener('pointermove', e => {
     if (SI.pan) return;
   }
   const [x, y] = siBoardXY(e);
-  if (!SI.drag) { $('siBoard').style.cursor = siHit(x, y) ? 'grab' : SI.selTool ? 'default' : 'crosshair'; return; }
+  if (!SI.drag) { $('siBoard').style.cursor = SI.handTool ? 'grab' : siHit(x, y) ? 'grab' : SI.selTool ? 'default' : 'crosshair'; return; }
   const d = SI.drag, g = SI.geo, sn = e.altKey ? 1 : S.grid;
   let ds = Math.round((x - d.x0) / SI_SW / sn) * sn, dp = Math.round(-(y - d.y0) / g.rowH);
   const o = [...d.orig.values()];
@@ -4343,7 +4504,9 @@ const siDragEnd = e => {
   }
   if (SI.pan) {
     if (e && e.pointerId !== SI.pan.id) return;   // 다른 손가락
-    const pn = SI.pan; SI.pan = null; if (!pn.moved && e && e.type === 'pointerup') siTapToggle(pn.x, pn.y, pn.n); return;
+    const pn = SI.pan; SI.pan = null;
+    if (pn.hand) { $('siBoard').style.cursor = 'grab'; return; }   // 손 도구: 톡 해도 아무것도 안 바뀜
+    if (!pn.moved && e && e.type === 'pointerup') siTapToggle(pn.x, pn.y, pn.n); return;
   }
   if (SI.drag) { SI.drag = null; siRefresh(); }
 };
@@ -4447,6 +4610,7 @@ function openStepInput() {
   stepM.classList.add('show');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   $('siMetro').classList.toggle('on', SI.metro); $('siSelTool').classList.toggle('on', SI.selTool); stepM.classList.toggle('siSelOn', SI.selTool);
+  $('siHandTool').classList.toggle('on', SI.handTool); stepM.classList.toggle('siHandOn', SI.handTool);
   siApplyAutoClass(); siBuildLens(); siBuildPiano(); siRenderSteps(); siRefresh();
   siStash(); if (SI.steps.length > 1 || SI.steps.some(st => st.notes.length)) smOpenWin(true);
 }
@@ -4515,6 +4679,7 @@ $('siCurName').onclick = () => smOpenWin();
 document.querySelectorAll('#smSort [data-sort]').forEach(b => b.onclick = () => smSort(b.dataset.sort));
 $('siSpread').onclick = () => siShiftGaps(1);
 $('siSelTool').onclick = () => siSetSelTool(!SI.selTool);
+$('siHandTool').onclick = () => siSetHandTool(!SI.handTool);
 $('siMetro').onclick = () => {
   SI.metro = !SI.metro; siSaveCfg(); $('siMetro').classList.toggle('on', SI.metro);
   if (SI.metro && !SI.playing) { AC(); click(ac.currentTime + 0.02, true); }
