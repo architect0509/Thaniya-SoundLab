@@ -18,6 +18,8 @@ const CORE = [
   './app.js',
   './mypage.js',
   './fullscreen.js',
+  './store.js',
+  './guide.js',
   './thaniya-intro.js',
   './lame.min.js',
   './Asset/icon.png',

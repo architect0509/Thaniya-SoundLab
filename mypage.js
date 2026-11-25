@@ -1,6 +1,6 @@
 /* Thaniya-SoundLab 마이페이지 (mypage.html 전용)
    편집 화면(app.js)과 따로 돌아가요 — 편집 화면을 고쳐도 마이페이지가 깨지지 않게 나눠 둔 파일.
-   곡 데이터는 편집 화면과 같은 localStorage(hc-library / hc-proj-<id>)를 함께 써요. */
+   곡 데이터는 편집 화면과 같은 저장소(store.js: localStorage + IndexedDB, hc-library / hc-proj-<id>)를 함께 써요. */
 (() => {
 'use strict';
 const LOW = 12, HIGH = 108;
@@ -326,9 +326,11 @@ const isVocalTrack = t => !!(t && INSTS[t.inst] && INSTS[t.inst].vocal);
 
 // ───────── 저장소 (편집 화면과 공유) ─────────
 const LIB_KEY = 'hc-library', PROJ = id => 'hc-proj-' + id;
-const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+const lsGet = k => { try { return JSON.parse(window.TSLS ? TSLS.get(k) : localStorage.getItem(k)); } catch (e) { return null; } };
+const lsRaw = (k, j) => { if (window.TSLS) { if (!TSLS.set(k, j)) throw new Error('full'); } else localStorage.setItem(k, j); };   // 저장소(store.js): localStorage + IndexedDB
+const lsDel = k => { try { if (window.TSLS) TSLS.del(k); else localStorage.removeItem(k); } catch (e) {} };
 let storageWarned = false;
-const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { if (!storageWarned) { storageWarned = true; setTimeout(() => toast('브라우저 저장 공간이 부족해요. 곡을 내보내고 정리해 주세요'), 0); } return false; } };
+const lsSet = (k, v) => { try { lsRaw(k, JSON.stringify(v)); return true; } catch (e) { if (!storageWarned) { storageWarned = true; setTimeout(() => toast('브라우저 저장 공간이 부족해요. 곡을 내보내고 정리해 주세요'), 0); } return false; } };
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 let LIB = lsGet(LIB_KEY);
 if (!LIB || !Array.isArray(LIB.items) || !LIB.items.length) {   // 아직 라이브러리가 없으면(첫 방문·이전 버전) 편집 화면이 먼저 만들어 줘요
@@ -341,8 +343,10 @@ const reloadLib = () => { const l = lsGet(LIB_KEY); if (l && Array.isArray(l.ite
 let toastT;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 let confirmResolve = null;
-function confirmBox(title, msg, okLabel = '확인') {
+function confirmBox(title, msg, okLabel = '확인', kind = 'danger') {   // kind: 'danger'(지우기 등) · 'ok'(일반 확인)
   $('cTitle').textContent = title; $('cMsg').textContent = msg || ''; $('cYes').textContent = okLabel;
+  const ok = kind === 'ok', ic = document.querySelector('#confirm .cicon');
+  $('cYes').className = 'btn ' + (ok ? 'primary' : 'danger'); ic.classList.toggle('ok', ok); ic.innerHTML = svg(ok ? 'music' : 'trash');
   $('confirm').classList.add('show'); setTimeout(() => $('cYes').focus(), 20);
   return new Promise(res => { confirmResolve = res; });
 }
@@ -402,6 +406,8 @@ function exportMidi(proj = S, name = (curItem() || {}).name) {
 
 
 // ───────── MIDI 불러오기 ─────────
+// 가사 토큰: 한글 한 글자 = 1, '-'(늘이기) = 1, 나머지는 무시 (app.js 의 KV.tokens 와 같은 규칙 · 마이페이지에는 보컬 엔진이 없어서 따로 둠)
+const lyTokens = text => { const out = []; for (const ch of String(text || '')) { const c = ch.charCodeAt(0); if (c >= 0xAC00 && c <= 0xD7A3) out.push(ch); else if (/^[-~ー_]$/.test(ch)) out.push('-'); } return out; };
 function parseMidi(buf) {
   const d = new DataView(buf); let p = 0;
   const str = n => { let s = ''; for (let i = 0; i < n; i++) s += String.fromCharCode(d.getUint8(p + i)); p += n; return s; };
@@ -427,7 +433,7 @@ function parseMidi(buf) {
         else if (type === 0x05 && l) {   // 가사 (UTF-8, 아니면 EUC-KR)
           const raw = new Uint8Array(buf, p, l); let txt = '';
           try { txt = new TextDecoder('utf-8', { fatal: true }).decode(raw); } catch (e) { try { txt = new TextDecoder('euc-kr').decode(raw); } catch (e2) {} }
-          const tk = KV.tokens(txt); if (tk.length) lyr.set(tick, (lyr.get(tick) || '') + tk.join(''));
+          const tk = lyTokens(txt); if (tk.length) lyr.set(tick, (lyr.get(tick) || '') + tk.join(''));
         }
         p += l; continue;
       }
@@ -439,10 +445,11 @@ function parseMidi(buf) {
       else if (type === 0x80 || (type === 0x90 && b === 0)) { const q = C.on[a]; if (q && q.length) { const [t0, v] = q.shift(); C.notes.push({ p: a, t0, t1: tick, v }); } }
     } catch (e) { break; } }   // 손상된 부분은 건너뛰고 읽은 데까지 살림
     p = end;
+    for (const ch in byCh) { const C = byCh[ch]; for (const k in C.on) for (const [t0, v] of C.on[k]) C.notes.push({ p: +k, t0, t1: Math.max(tick, t0 + div / 4), v }); }   // 끝(Note Off)이 없는 노트는 트랙 끝에서 닫기
     for (const ch in byCh) if (byCh[ch].notes.length) {
       const ns = byCh[ch].notes; let ly = 0;
       if (lyr.size) ns.forEach(n => { if (lyr.has(n.t0)) { n.ly = lyr.get(n.t0); ly++; } });
-      tracks.push({ name, ch: +ch, prog: byCh[ch].prog, notes: ns, lyrics: ly > ns.length * 0.3 });
+      tracks.push({ name, ch: +ch, prog: byCh[ch].prog, notes: ns.sort((x, y) => x.t0 - y.t0 || x.p - y.p), lyrics: ly > ns.length * 0.3 });
     }
   }
   return { tpq: div, bpm: Math.round(60000000 / (tempo || 500000)), tracks, ts: [2, 3, 4, 5].includes(tsig) ? tsig : 4 };
@@ -486,7 +493,7 @@ async function deleteProjects(ids) {
   if (!await confirmBox(`곡 ${ids.length}개를 삭제할까요?`, '이 브라우저에서 완전히 지워져요. 필요하면 먼저 프로젝트 파일로 내보내세요.', '삭제')) return;
   const hadCur = ids.includes(LIB.cur);
   LIB.items = LIB.items.filter(i => !ids.includes(i.id));
-  ids.forEach(id => { try { localStorage.removeItem(PROJ(id)); } catch (e) {} });
+  ids.forEach(id => { lsDel(PROJ(id)); lsDel('hc-stepboards-' + id); });
   if (hadCur) afterDeleteCur();
   lsSet(LIB_KEY, LIB); mpSel = new Set(); renderMyPage(); toast(`곡 ${ids.length}개를 삭제했어요`);
 }
@@ -512,7 +519,7 @@ async function deleteProject(id) {
   const it = LIB.items.find(i => i.id === id); if (!it) return;
   if (!await confirmBox(`'${it.name}'을(를) 삭제할까요?`, '이 브라우저에서 완전히 지워져요. 필요하면 먼저 프로젝트 파일로 내보내세요.', '삭제')) return;
   LIB.items = LIB.items.filter(i => i.id !== id);
-  try { localStorage.removeItem(PROJ(id)); } catch (e) {}
+  lsDel(PROJ(id)); lsDel('hc-stepboards-' + id);
   if (id === LIB.cur) afterDeleteCur();
   lsSet(LIB_KEY, LIB); renderMyPage(); toast(`'${it.name}'을(를) 삭제했어요`);
 }
@@ -521,22 +528,41 @@ function exportProjectById(id, kind) {
   if (kind === 'midi') exportMidi(p, it.name); else exportProjectFile(p, it.name);
 }
 async function importFiles(files) {
-  let ok = 0;
+  let ok = 0, lastId = null, midiN = 0, backup = false;
   for (const f of files) {
     try {
-      const base = f.name.replace(/\.(tsl\.json|json|midi?|MID)$/i, '');
-      if (/\.midi?$/i.test(f.name)) {
+      const base = f.name.replace(/\.(tsl\.json|json|midi?|kar|smf)$/i, '');
+      const head = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      if (/\.(midi?|kar|smf)$/i.test(f.name) || String.fromCharCode(...head) === 'MThd') {   // 확장자가 없어도 MIDI 머리(MThd)면 MIDI
         const P = midiToProject(parseMidi(await f.arrayBuffer()));
-        if (addProject(P, base)) ok++;
+        const id = addProject(P, base); if (id) { ok++; midiN++; lastId = id; }
       } else {
         const d = JSON.parse(await f.text());
+        if (d && d.format === 'thaniya-soundlab-backup' && Array.isArray(d.items)) {   // 전체 백업: 곡 여러 개를 한 번에 (이미 있는 같은 곡은 건너뛰기)
+          const have = new Set(LIB.items.map(i => i.created + '|' + i.updated));
+          let n = 0, skip = 0;
+          for (const it of d.items) {
+            const pj = it && it.project; if (!pj || !Array.isArray(pj.notes) || !Array.isArray(pj.tracks)) continue;
+            if (have.has(it.created + '|' + it.updated)) { skip++; continue; }
+            const id = addProject(Object.assign(blankProject(), pj), it.name || base); if (!id) break;
+            const li = LIB.items.find(i => i.id === id); if (it.created) li.created = it.created; if (it.updated) li.updated = it.updated; n++;
+          }
+          lsSet(LIB_KEY, LIB); ok += n; backup = true;
+          toast(`백업에서 곡 ${n}개를 되살렸어요${skip ? ` · 이미 있는 곡 ${skip}개는 건너뛰었어요` : ''}`);
+          continue;
+        }
         const proj = d && d.format === 'thaniya-soundlab' ? d.project : d;
         if (!proj || !Array.isArray(proj.notes) || !Array.isArray(proj.tracks)) throw new Error('Thaniya-SoundLab 프로젝트 파일이 아니에요');
         if (addProject(Object.assign(blankProject(), proj), (d && d.name) || base)) ok++;
       }
     } catch (e) { toast(`'${f.name}' 불러오기 실패: ${e.message}`); }
   }
-  if (ok) { renderMyPage(); toast(`곡 ${ok}개를 불러왔어요 · '편집'을 눌러 열어 보세요`); }
+  if (!ok) return;
+  renderMyPage();
+  if (ok === 1 && midiN === 1 && lastId) {   // MIDI 한 곡이면 바로 열지 물어봐요
+    const it = LIB.items.find(i => i.id === lastId), P = lsGet(PROJ(lastId)) || { tracks: [], notes: [] };
+    if (await confirmBox(`'${it.name}' 곡을 불러왔어요`, `트랙 ${P.tracks.length}개 · 노트 ${P.notes.length}개 · ${P.bpm} BPM — 바로 편집할까요?`, '편집하기', 'ok')) openProject(lastId);
+  } else if (!backup) toast(`곡 ${ok}개를 불러왔어요 · '편집'을 눌러 열어 보세요`);
 }
 function timeAgo(t) {
   const s = (Date.now() - t) / 1000;
@@ -561,15 +587,17 @@ function drawThumb(cv, p) {
   }
   c.globalAlpha = 1;
 }
-function storageUsage() { let b = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^hc-|^humming/.test(k)) b += (localStorage.getItem(k) || '').length * 2; } } catch (e) {} return b; }
+function storageUsage() { if (window.TSLS) return TSLS.usage(); let b = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^hc-|^humming/.test(k)) b += (localStorage.getItem(k) || '').length * 2; } } catch (e) {} return { used: b, cap: 5 * 1024 * 1024, idb: false, over: 0 }; }
+const fmtBytes = b => b < 1024 * 1024 ? (b / 1024).toFixed(0) + 'KB' : b < 1024 ** 3 ? (b / 1024 / 1024).toFixed(1) + 'MB' : (b / 1024 ** 3).toFixed(1) + 'GB';
 function renderMyPage() {
   const q = $('mpSearch').value.trim().toLowerCase(), sort = $('mpSort').value;
   const items = LIB.items.filter(i => !q || i.name.toLowerCase().includes(q));
   items.sort(sort === 'name' ? (a, b) => a.name.localeCompare(b.name, 'ko') : sort === 'created' ? (a, b) => b.created - a.created : (a, b) => b.updated - a.updated);
   $('mpSub').textContent = `이 브라우저에 저장된 곡 ${LIB.items.length}개 · 자동 저장`;
-  const used = storageUsage(), cap = 5 * 1024 * 1024;
-  $('mpStoreFill').style.width = Math.min(100, used / cap * 100) + '%';
-  $('mpStoreTxt').textContent = `${(used / 1024).toFixed(0)}KB / 약 5MB`;
+  const { used, cap, idb } = storageUsage();
+  $('mpStoreFill').style.width = Math.max(used ? 1 : 0, Math.min(100, used / cap * 100)) + '%';
+  $('mpStoreTxt').textContent = `${fmtBytes(used)} / ${idb ? '약 ' + fmtBytes(cap) : '약 5MB'}`;
+  $('mpStoreTxt').parentElement.title = idb ? '곡은 브라우저 데이터베이스(IndexedDB)에 저장돼요 — 큰 곡도 넉넉히 저장할 수 있어요' : '이 브라우저는 데이터베이스 저장을 쓸 수 없어서 약 5MB까지만 저장돼요';
   mpSel.forEach(id => { if (!LIB.items.some(i => i.id === id)) mpSel.delete(id); }); updateSelBar();
   const g = $('mpGrid'); g.innerHTML = '';
   if (!items.length) { g.appendChild(el('div', 'mpEmpty', q ? `'${q}'에 맞는 곡이 없어요` : '저장된 곡이 없어요. 새 곡을 만들어 보세요')); return; }
@@ -690,6 +718,15 @@ $('mpSelDone').onclick = () => setSelMode(false);
 $('mpSelAll').onclick = () => { const q = $('mpSearch').value.trim().toLowerCase(); const vis = LIB.items.filter(i => !q || i.name.toLowerCase().includes(q)).map(i => i.id); mpSel = vis.every(id => mpSel.has(id)) ? new Set() : new Set(vis); renderMyPage(); };
 $('mpSelDel').onclick = () => deleteProjects([...mpSel]);
 $('mpImport').onclick = () => $('mpFile').click();
+function exportBackup() {   // 모든 곡을 파일 하나로 (다른 브라우저 · 컴퓨터로 옮기거나 보관용)
+  const items = LIB.items.map(i => ({ name: i.name, created: i.created, updated: i.updated, project: lsGet(PROJ(i.id)) })).filter(i => i.project);
+  if (!items.length) { toast('백업할 곡이 없어요'); return; }
+  const d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  downloadBlob(new Blob([JSON.stringify({ format: 'thaniya-soundlab-backup', version: 1, created: Date.now(), items })], { type: 'application/json' }), `SoundLab 백업 ${stamp} (${items.length}곡).json`);
+  try { localStorage.setItem('hc-lastBackup', String(Date.now())); } catch (e) {}
+  toast(`곡 ${items.length}개를 백업 파일로 저장했어요 · 「불러오기」로 언제든 되살릴 수 있어요`);
+}
+$('mpBackup').onclick = exportBackup;
 $('mpFile').addEventListener('change', e => { importFiles([...e.target.files]); e.target.value = ''; });
 $('mpSearch').addEventListener('input', renderMyPage);
 $('mpSort').addEventListener('change', e => { renderMyPage(); e.target.blur(); });

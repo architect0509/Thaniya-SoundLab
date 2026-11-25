@@ -15,7 +15,7 @@
 <script src="./install/install.js" defer></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>마이페이지 — Thaniya-SoundLab</title>
-<link rel="stylesheet" href="app.css?v=20261122i">
+<link rel="stylesheet" href="app.css?v=20261126g">
 </head>
 <body data-page="mypage" class="mpOnly">
 
@@ -32,7 +32,8 @@
       <div class="avatar" data-icon="logo" data-logo></div>
       <div><div class="mpTitle">마이페이지</div><div class="mpSub" id="mpSub"></div></div>
       <span style="flex:1"></span>
-      <button class="btn" id="mpImport" title="파일 불러오기" aria-label="파일 불러오기"><span data-icon="upload"></span><span class="lbl">파일 불러오기</span></button>
+      <button class="btn" id="mpImport" title="MIDI(.mid) · 프로젝트(.json) 파일 불러오기" aria-label="MIDI · 프로젝트 파일 불러오기"><span data-icon="upload"></span><span class="lbl">불러오기 (MIDI · 프로젝트)</span></button>
+      <button class="btn" id="mpBackup" title="모든 곡을 파일 하나로 백업 (다른 기기로 옮기기 · 보관) — 되살릴 때는 「불러오기」" aria-label="전체 백업"><span data-icon="download"></span><span class="lbl">전체 백업</span></button>
       <button class="btn primary" id="mpNew" title="새 곡 만들기" aria-label="새 곡 만들기"><span data-icon="plus"></span><span class="lbl">새 곡 만들기</span></button>
     </div>
     <div class="mpTools">
@@ -44,9 +45,9 @@
     </div>
     <div class="mpSelBar"><b id="mpSelCnt">0개 선택</b><button class="btn" id="mpSelAll">전체 선택</button><button class="btn danger" id="mpSelDel"><span data-icon="trash"></span>삭제</button><button class="btn" id="mpSelDone">완료</button></div>
     <div id="mpGrid"></div>
-    <div class="mpDrop" id="mpDrop">여기에 파일을 놓으면 불러와요 (.json 프로젝트 · .mid MIDI)</div>
+    <div class="mpDrop" id="mpDrop">여기에 파일을 놓으면 불러와요 (.mid MIDI · .json 프로젝트 · 전체 백업)</div>
   </div>
-  <input type="file" id="mpFile" accept=".json,.mid,.midi,application/json,audio/midi" multiple hidden>
+  <input type="file" id="mpFile" accept=".json,.mid,.midi,.kar,application/json,audio/midi,audio/mid,audio/x-midi" multiple hidden>
 </div>
 
 <div id="confirm"><div class="ccard">
@@ -60,7 +61,7 @@
 <script>
 /* 스크립트 로더: app.js 든 app.js.txt 든 있는 이름으로 불러오고, 서버가 .txt 를 text/plain(+nosniff)으로 막아도 내용을 읽어서 직접 실행함 */
 (function () {
-  var V = '?v=20261122i', list = [['fullscreen.js', 'fullscreen.js.txt'], ['mypage.js', 'mypage.js.txt']];
+  var V = '?v=20261126g', list = [['store.js', 'store.js.txt'], ['fullscreen.js', 'fullscreen.js.txt'], ['mypage.js', 'mypage.js.txt'], ['guide.js', 'guide.js.txt']];
   function run(t, src) { var s = document.createElement('script'); s.text = t + '\n//# sourceURL=' + src; document.body.appendChild(s); }
   function one(names, ok, bad) {
     if (!names.length) return bad();
@@ -75,7 +76,10 @@
     document.body.appendChild(s);
   }
   function fail(n) { var d = document.createElement('div'); d.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;padding:12px 14px;border-radius:12px;background:#2a1212;color:#ffd7d7;border:1px solid #ff4d4d;font:600 13px system-ui,sans-serif'; d.textContent = '스크립트를 불러오지 못했어요: ' + n[0] + ' (또는 ' + n[1] + ') — 같은 폴더에 있는지 확인해 주세요'; document.body.appendChild(d); }
-  (function next(i) { if (i < list.length) one(list[i], function () { next(i + 1); }, function () { fail(list[i]); }); })(0);
+  function wait() {   // 저장소(store.js)가 IndexedDB 를 읽어 들일 때까지 잠깐 기다렸다가 다음 스크립트 (최대 2.5초)
+    return window.TSLS && TSLS.ready ? Promise.race([TSLS.ready, new Promise(function (r) { setTimeout(r, 2500); })]) : Promise.resolve();
+  }
+  (function next(i) { if (i < list.length) one(list[i], function () { wait().then(function () { next(i + 1); }); }, function () { if (list[i][0] === 'store.js') next(i + 1); else fail(list[i]); }); })(0);
 })();
 </script>
 </body>
