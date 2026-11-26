@@ -1,7 +1,7 @@
 /* Thaniya-SoundLab · 기능 가이드 (guide.js)
  * 기능마다 '시범 영상'(작은 화면 + 움직이는 마우스)으로 쓰는 법을 보여 주는 창.
  * - window.openGuide(id) : 가이드 열기 (id 없으면 목록 첫 번째)
- * - 기능 창(반주 · 스텝 · 다듬기 · 세기 레인)에 「사용법」 버튼을 달고, 처음 열 때 한 번 '시범 보기' 말풍선을 띄워요
+ * - 기능 창(반주 · 스텝 · 다듬기 · MIDI 도구 · 세기/오토메이션 레인 · 믹서 · 내보내기)에 「사용법」 버튼을 달고, 처음 열 때 한 번 '시범 보기' 말풍선을 띄워요
  * - 편집 화면(edit.html)과 마이페이지(mypage.html) 둘 다에서 동작 (앱 함수가 있으면 「직접 해 보기」로 바로 열어 줘요)
  */
 (function () {
@@ -29,7 +29,11 @@
     book: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/>',
     q: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/>',
     bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
-    chk: '<path d="M5 12.5l4.5 4.5L19 7"/>'
+    chk: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+    mix: '<path d="M6 3.5v17M12 3.5v17M18 3.5v17"/><rect x="3.8" y="13" width="4.4" height="3.2" rx="1" fill="currentColor"/><rect x="9.8" y="6.5" width="4.4" height="3.2" rx="1" fill="currentColor"/><rect x="15.8" y="10.5" width="4.4" height="3.2" rx="1" fill="currentColor"/>',
+    auto: '<path d="M3 18c3 0 4-9 7-9s3 6 6 6 3-8 5-10"/><circle cx="10" cy="9" r="1.6" fill="currentColor"/><circle cx="16" cy="15" r="1.6" fill="currentColor"/><path d="M3 21h18" opacity=".5"/>',
+    mt: '<path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/>',
+    stem: '<rect x="3" y="4" width="18" height="4" rx="1.2"/><rect x="3" y="10" width="13" height="4" rx="1.2"/><rect x="3" y="16" width="16" height="4" rx="1.2"/>'
   };
   var svg = function (k, cls) { return '<svg class="' + (cls || 'gi') + '" viewBox="0 0 24 24">' + (IC[k] || '') + '</svg>'; };
 
@@ -43,7 +47,7 @@
     var tracks = (o.tracks || [['피아노', '#4a9eff', 1]]).map(function (t) { return '<div class="gm-trk' + (t[2] ? ' on' : '') + '"><i style="background:' + t[1] + '"></i>' + t[0] + '</div>'; }).join('');
     return '<div class="gm">' +
       '<div class="gm-top"><span class="gm-logo"></span><b class="gm-title">' + (o.title || '새 곡') + '</b><span class="sp"></span>' +
-      '<span class="gm-pill" data-k="acc">' + svg('acc') + '반주</span><span class="gm-pill" data-k="nt">' + svg('nt') + '다듬기</span><span class="gm-pill" data-k="step">' + svg('step') + '스텝</span></div>' +
+      '<span class="gm-pill" data-k="acc">' + svg('acc') + '반주</span><span class="gm-pill" data-k="nt">' + svg('nt') + '다듬기</span><span class="gm-pill" data-k="mt">' + svg('mt') + 'MIDI 도구</span><span class="gm-pill" data-k="mix">' + svg('mix') + '믹서</span><span class="gm-pill" data-k="step">' + svg('step') + '스텝</span><span class="gm-ic" data-k="exp" title="내보내기">' + svg('mp') + '</span></div>' +
       '<div class="gm-body"><div class="gm-tracks"><div class="gm-th">트랙</div><div class="gm-tl">' + tracks + '</div></div>' +
       '<div class="gm-roll' + (o.vel ? ' velOn' : '') + '">' +
       '<div class="gm-corner"><span class="gm-velBtn">' + svg('vel') + '</span></div>' +
@@ -194,6 +198,133 @@
       open: function () { var b = $id('velBtn'); if (b && !b.classList.contains('on')) b.click(); }
     },
     {
+      id: 'mt', name: 'MIDI 도구', icon: 'mt', hue: ['#5ee0c0', '#1f9f86'], keys: ['N'], badge: 'NEW',
+      line: '코드 · 아르페지오 · 스트럼 · 변형',
+      desc: '고른 노트를 <b>한 번에 화음으로 쌓거나(코드), 화음을 차례로 펼치거나(아르페지오), 기타처럼 긁고(스트럼), 길이 · 순서 · 높이를 바꿀 수 있도록</b> 하는 기능이다. 유료 작곡 프로그램의 「코드 스탬프 · 아르페지에이터 · 스트럼」과 같은 일을 한다.',
+      steps: [
+        ['노트 고르기', '선택 도구로 바꿀 노트를 끌어서 고른다. 고르지 않으면 지금 트랙 전체가 대상이다.'],
+        ['MIDI 도구 열기', '상단의 「MIDI 도구」 버튼을 누르거나 <kbd>N</kbd> 키를 누른다.'],
+        ['코드 만들기', '「코드」 탭에서 메이저 · 마이너 · 7 · sus4 같은 화음을 고르면 노트마다 화음이 쌓인다. 「스케일에 맞춰」를 고르면 설정한 조 안의 화음으로 쌓인다.'],
+        ['펼치기 · 긁기', '「아르페지오」 탭은 화음을 방향 · 속도 · 옥타브에 맞춰 차례로 펼치고, 「스트럼」 탭은 화음을 기타처럼 조금씩 어긋나게 친다.'],
+        ['변형 · 적용', '「변형」 탭에서 레가토 · 길이 비율 · 잘게 나누기 · 역행 · 상하 반전을 고를 수 있다. 「적용」(<kbd>Enter</kbd>)을 눌러야 확정된다.']
+      ],
+      tips: ['바꾸는 동안 보드에 결과가 바로 보이고, 「들어보기」(Space)로 소리를 확인할 수 있다.', '코드 → 아르페지오 순서로 두 번 적용하면 멜로디 한 줄로 반주 패턴을 만들 수 있다.', '마음에 안 들면 Ctrl+Z 한 번으로 통째로 되돌린다.'],
+      scene: function () {
+        return editor({ notes: MT_MEL.map(function (m) { return note(m[0], m[1], m[2], 'm'); }).join(''), extra:
+          '<div class="gm-mt"><div class="gm-mh"><span class="gm-tab on" data-k="tc">코드</span><span class="gm-tab" data-k="ta">아르페지오</span><span class="gm-tab">스트럼</span><span class="gm-tab">변형</span><span class="sp"></span><span class="gm-x">' + svg('x') + '</span></div>' +
+          '<div class="gm-row gm-rc"><span class="lb">화음</span><span class="gm-sel" data-k="ch">메이저 ▾</span><span class="gm-dd gm-ddm"><b>메이저</b><b data-k="c7">maj7 (세련되게)</b><b>마이너</b><b>sus4</b></span></div>' +
+          '<div class="gm-row gm-ra"><span class="lb">방향</span><span class="gm-seg"><b class="on">위로 ↑</b><b>아래로</b><b>위아래</b></span><em>1/16</em></div>' +
+          '<div class="gm-mf"><span class="gm-btn">' + svg('play') + '들어보기</span><span class="gm-info" data-v="mtinfo">고른 노트 4개</span><span class="gm-btn">취소</span><span class="gm-btn pri" data-k="ok">적용</span></div></div>' });
+      },
+      script: [
+        { cap: '선택 도구로 바꿀 노트를 끌어서 고른다', step: 0, drag: { from: [150, 130], to: [600, 260] }, on: function (s, p, a, b) { lasso(s, a, b); }, end: function (s) { lassoEnd(s); s.qa('.gm-n').forEach(function (n) { n.classList.add('sel'); }); }, hold: 500 },
+        { cap: '상단의 「MIDI 도구」를 누른다 (N)', step: 1, click: '[data-k=mt]', fx: function (s) { s.q('.gm-mt').classList.add('show'); s.q('.gm-mt').classList.remove('arp'); }, hold: 500 },
+        { cap: '「코드」 탭에서 화음 종류를 고른다', step: 2, click: '[data-k=ch]', fx: function (s) { s.q('.gm-ddm').classList.add('show'); }, hold: 350 },
+        { cap: '노트마다 화음이 쌓인다 — 보드에서 바로 확인', step: 2, click: '[data-k=c7]', fx: function (s) { s.q('.gm-ddm').classList.remove('show'); s.q('[data-k=ch]').textContent = 'maj7 ▾'; mtChord(s); s.q('[data-v=mtinfo]').textContent = '고른 노트 4개 → 16개'; }, hold: 1200 },
+        { cap: '「아르페지오」 탭: 화음이 위로 차례차례 펼쳐진다', step: 3, click: '[data-k=ta]', fx: function (s) { s.q('.gm-mt').classList.add('arp'); s.qa('.gm-mt .gm-tab').forEach(function (t) { t.classList.toggle('on', t.dataset.k === 'ta'); }); mtArp(s); s.q('[data-v=mtinfo]').textContent = '고른 노트 16개 → 32개'; }, hold: 1600 },
+        { cap: '「적용」을 누르면 확정! (Ctrl+Z로 되돌리기)', step: 4, click: '.gm-mt [data-k=ok]', fx: function (s) { s.q('.gm-mt').classList.remove('show'); s.qa('.gm-n').forEach(function (n) { n.classList.remove('sel'); }); toast(s, '아르페지오 — 노트 32개 (Ctrl+Z 로 되돌리기)'); }, hold: 2200 }
+      ],
+      open: function () { clickReal('mtBtn'); }
+    },
+    {
+      id: 'auto', name: '오토메이션', icon: 'auto', hue: ['#ff9f5a', '#d9632a'], keys: ['B'], badge: 'NEW',
+      line: '볼륨 · 팬 · 밝기를 시간에 따라',
+      desc: '곡이 흐르는 동안 <b>트랙의 볼륨 · 좌우 위치(팬) · 밝기(필터)가 저절로 바뀌도록 선을 그려 둘 수 있도록</b> 하는 기능이다. 점점 커지는 인트로, 끝에서 사라지는 페이드 아웃, 필터가 열리는 빌드업을 만들 수 있다.',
+      steps: [
+        ['레인 열기', '<kbd>B</kbd> 키를 누르면 보드 아래에 볼륨 오토메이션 레인이 열린다. 레인 왼쪽 목록에서 세기 · 볼륨 · 팬 · 밝기를 고를 수도 있다.'],
+        ['선 그리기', '레인을 누른 채 끌면 지나간 자리의 값이 그 높이로 그려진다. 위 = 크게(오른쪽 · 밝게), 아래 = 작게(왼쪽 · 어둡게).'],
+        ['직선 (Shift)', '<kbd>Shift</kbd>를 누른 채 끌면 시작점에서 끝점까지 곧은 선 — 페이드 인 / 아웃에 좋다.'],
+        ['종류 바꾸기', '<kbd>B</kbd>를 다시 누를 때마다 볼륨 → 팬 → 밝기 → 닫기. 종류마다 따로 그려진다.'],
+        ['들어 보기 · 지우기', '재생하면 그린 대로 소리가 바뀐다. 우클릭(또는 <kbd>Alt</kbd>)으로 끌면 그 구간을 지우고, 휴지통 버튼은 전부 지운다.']
+      ],
+      tips: ['오토메이션은 지금 고른 트랙에만 그려진다. 트랙을 바꾸면 그 트랙의 선이 보인다.', '볼륨의 노란 가로선이 100%(믹서 볼륨 그대로) 자리다.', 'MP3 · 스템 · 엔진 저장에도 그대로 들어간다.'],
+      scene: function () { return editor({ notes: melody(), vel: true, extra: '' }); },
+      script: [
+        { cap: 'B 키를 누르면 오토메이션 레인이 열린다', step: 0, key: 'B', fx: function (s) { s.q('.gm-roll').classList.add('velOn'); auInit(s, '볼륨'); }, hold: 700 },
+        { step: 0, keyUp: true, hold: 200 },
+        { cap: '누른 채 끌어서 볼륨이 점점 커지는 선을 그린다', step: 1, drag: { from: function (s) { return lanePt(s, 0.02, 0.15); }, to: function (s) { return lanePt(s, 0.48, 0.8); } }, on: function (s, p, a, b) { auDraw(s, b); }, hold: 500 },
+        { cap: 'Shift를 누른 채 끌면 직선 — 끝에서 사라지는 페이드 아웃', step: 2, key: 'Shift', drag: { from: function (s) { return lanePt(s, 0.62, 0.8); }, to: function (s) { return lanePt(s, 0.98, 0.04); } }, on: function (s, p, a, b) { auGuide(s, a, b); }, end: function (s) { auLineEnd(s); }, hold: 700 },
+        { step: 2, keyUp: true, hold: 200 },
+        { cap: '레인 왼쪽 목록에서 「팬」으로 바꾸면 따로 그릴 수 있다', step: 3, click: '.gm-velH', fx: function (s) { s.q('.gm-lsel').classList.add('show'); }, hold: 350 },
+        { step: 3, click: '.gm-lsel [data-k=pan]', fx: function (s) { s.q('.gm-lsel').classList.remove('show'); auInit(s, '팬'); }, hold: 300 },
+        { cap: '팬: 위 = 오른쪽 · 아래 = 왼쪽 — 소리가 좌우로 오간다', step: 3, drag: { from: function (s) { return lanePt(s, 0.04, 0.5); }, to: function (s) { return lanePt(s, 0.95, 0.5); } }, on: function (s, p, a, b) { b = [b[0], lanePt(s, 0, 0.5 + 0.38 * Math.sin(p * Math.PI * 4))[1]]; auDraw(s, b); }, hold: 500 },
+        { cap: '재생하면 그린 대로 소리가 바뀐다', step: 4, click: '[data-k=play]', fx: function (s) { s.q('[data-k=play]').classList.add('on'); playLoop(s, 0, 1, 0); s.q('.gm-meter').classList.add('on'); }, hold: 1900 },
+        { step: 4, fx: function (s) { s.q('[data-k=play]').classList.remove('on'); stopPh(s); s.q('.gm-meter').classList.remove('on'); }, hold: 1000 }
+      ],
+      open: function () {
+        var ed = $id('editor'), ls = $id('laneSel');
+        if (ed && !ed.classList.contains('velOn')) { var b = $id('velBtn'); if (b) b.click(); }
+        if (ls) { ls.value = 'vol'; ls.dispatchEvent(new Event('change', { bubbles: true })); }
+      }
+    },
+    {
+      id: 'mix', name: '믹서', icon: 'mix', hue: ['#6ec3ff', '#2f7fd9'], keys: ['X'], badge: 'NEW',
+      line: 'EQ · 컴프 · 센드 · 미터 · LUFS',
+      desc: '트랙마다 <b>볼륨 · 팬 · 3밴드 EQ · 컴프레서 · 리버브/딜레이를 한 화면에서 조절하고, 레벨 미터와 라우드니스(LUFS)를 보며 소리의 균형을 맞출 수 있도록</b> 하는 기능이다.',
+      steps: [
+        ['믹서 열기', '상단의 「믹서」 버튼을 누르거나 <kbd>X</kbd> 키를 누른다. 트랙마다 세로 줄(채널)이 하나씩 보인다.'],
+        ['볼륨 맞추기', '페이더(손잡이)를 위아래로 끌어 트랙끼리 크기를 맞춘다. 흰 줄이 0dB(원래 크기)이고, 더블클릭하면 0dB로 돌아간다.'],
+        ['EQ · 컴프', '저음 · 중음 · 고음을 올리고 내려 음색을 다듬는다. 「컴프」를 올리면 큰 소리 작은 소리가 고르게 눌려 단단해진다.'],
+        ['리버브 · 딜레이', '리버브는 공간의 울림, 딜레이는 BPM에 맞춰 메아리(점8분)를 더한다.'],
+        ['미터 보며 듣기', '재생하면 트랙 미터와 마스터 미터가 움직인다. 마스터의 「라우드니스」(LUFS)와 「최고 피크」로 전체 크기를 확인한다.']
+      ],
+      tips: ['재생하면서 바꾸면 바로 들린다. 바꾼 값은 곡에 저장되고 Ctrl+Z로 되돌릴 수 있다.', '음원 사이트용으로는 라우드니스 −14 LUFS 근처, 최고 피크 −1dB 아래가 무난하다.', '마스터의 빨간 불은 0dB를 넘었다는 뜻 — 누르면 꺼진다.'],
+      scene: function () {
+        var strip = function (i, nm, col, v) {
+          return '<div class="gm-ch" data-i="' + i + '" style="--tc:' + col + '"><b class="nm">' + nm + '</b>' +
+            ['저', '중', '고', '컴프', '리버브', '딜레이'].map(function (l, k) { return '<span class="r"><i>' + l + '</i><span class="gm-sl" data-k="m' + i + k + '"><i></i><b></b><u class="start"></u><u class="mid"></u><u class="end"></u></span></span>'; }).join('') +
+            '<span class="ms"><b>M</b><b>S</b></span><span class="fw"><span class="fd" data-k="f' + i + '" style="--v:' + v + '"><b></b><u class="lo"></u></span><span class="mt" data-m="' + i + '"><i></i></span></span><em data-v="f' + i + '">0.0</em></div>';
+        };
+        return editor({ tracks: [['피아노', '#4a9eff', 1], ['베이스', '#ff8a3d', 0], ['드럼', '#2fb39a', 0]], notes: melody(), extra:
+          '<div class="gm-mix"><div class="gm-mixH"><b>' + svg('mix') + '믹서</b><span>트랙 3개</span><span class="sp"></span><span class="gm-x">' + svg('x') + '</span></div><div class="gm-mixB">' +
+          strip(0, '피아노', '#4a9eff', 0.667) + strip(1, '베이스', '#ff8a3d', 0.667) + strip(2, '드럼', '#2fb39a', 0.667) +
+          '<div class="gm-ch gm-mst"><b class="nm">마스터</b><span class="lu"><i>라우드니스</i><b data-v="lm">—</b><i>재생 평균</i><b data-v="li">—</b><i>최고 피크</i><b data-v="pk">—</b></span><span class="lim">● 리미터</span>' +
+          '<span class="fw"><span class="fd" style="--v:.667"><b></b><u class="lo"></u></span><span class="mt two" data-m="3"><i></i><i></i></span></span><em>0.0</em></div>' +
+          '</div></div>' });
+      },
+      script: [
+        { cap: '상단의 「믹서」를 누르면 (X) 트랙마다 채널이 보인다', step: 0, click: '[data-k=mix]', fx: function (s) { s.q('.gm-mix').classList.add('show'); for (var i = 0; i < 3; i++) for (var k = 0; k < 6; k++) mixSl(s, 'm' + i + k, k === 4 ? 0.25 : k < 3 ? 0.5 : 0); }, hold: 700 },
+        { cap: '베이스가 너무 크다 — 페이더를 아래로 끌어 볼륨을 줄인다', step: 1, drag: { from: '[data-k=f1] b', to: function (s) { var r = s.rel(s.q('[data-k=f1]')); return [r.x + r.w / 2, r.y + r.h * 0.5]; } }, on: function (s, p) { fader(s, 1, 0.667 - p * 0.18); }, hold: 500 },
+        { cap: 'EQ — 피아노의 고음을 올리면 더 밝고 또렷해진다', step: 2, drag: { from: '[data-k=m02] b', to: function (s) { var r = s.rel(s.q('[data-k=m02]')); return [r.x + r.w * 0.85, r.y + 2]; } }, on: function (s, p) { mixSl(s, 'm02', 0.5 + p * 0.35); }, hold: 400 },
+        { cap: '드럼에 컴프를 걸면 소리가 단단하게 고르게', step: 2, drag: { from: '[data-k=m23] b', to: function (s) { var r = s.rel(s.q('[data-k=m23]')); return [r.x + r.w * 0.6, r.y + 2]; } }, on: function (s, p) { mixSl(s, 'm23', p * 0.6); }, hold: 400 },
+        { cap: '피아노에 딜레이를 조금 — BPM에 맞춘 메아리가 생긴다', step: 3, drag: { from: '[data-k=m05] b', to: function (s) { var r = s.rel(s.q('[data-k=m05]')); return [r.x + r.w * 0.4, r.y + 2]; } }, on: function (s, p) { mixSl(s, 'm05', p * 0.4); }, hold: 500 },
+        { cap: '재생하면 미터와 라우드니스(LUFS)가 움직인다', step: 4, click: '[data-k=play]', fx: function (s) { s.q('[data-k=play]').classList.add('on'); playLoop(s, 0, 1, 0); meters(s, 2600); }, hold: 2800 },
+        { step: 4, fx: function (s) { s.q('[data-k=play]').classList.remove('on'); stopPh(s); }, hold: 900 }
+      ],
+      open: function () { var b = $id('mixBtn'); if (b) b.click(); }
+    },
+    {
+      id: 'stem', name: '스템 내보내기', icon: 'stem', hue: ['#b6e35a', '#6fa61f'], keys: [], badge: 'NEW',
+      line: '트랙마다 WAV로 따로 · ZIP',
+      desc: '곡을 <b>트랙마다 따로 WAV 파일(스템)로 만들어 ZIP 하나로 저장</b>해서, 다른 작곡 프로그램(DAW)에서 이어 믹스하거나 협업자에게 넘길 수 있도록 하는 기능이다.',
+      steps: [
+        ['내보내기 열기', '상단 오른쪽의 내보내기 버튼을 누른다 (마이페이지 곡 메뉴의 「내보내기」도 같다).'],
+        ['스템 고르기', '「파일로 저장」에서 <b>스템 (트랙별 WAV)</b>을 고른다.'],
+        ['만들기', '「파일 저장」을 누르면 트랙을 하나씩 소리로 만든다. 뮤트한 트랙은 빠지고, 솔로를 켜면 솔로 트랙만 나온다.'],
+        ['ZIP 저장', '모든 WAV는 길이가 같고 0초에서 시작한다. BPM · 박자가 적힌 「정보.txt」가 함께 들어 있다.'],
+        ['다른 DAW에서 쓰기', 'ZIP을 풀어 WAV들을 다른 DAW에 넣고 모두 0초에 놓으면 원래 곡과 똑같이 맞는다.']
+      ],
+      tips: ['믹서의 EQ · 컴프 · 리버브 · 딜레이와 오토메이션이 들어간 소리로 나온다 (마스터 리미터는 빠짐).', '파일이 크니 긴 곡은 시간이 조금 걸린다. 진행 창의 「취소」로 멈출 수 있다.'],
+      scene: function () {
+        return editor({ tracks: [['피아노', '#4a9eff', 1], ['베이스', '#ff8a3d', 0], ['드럼', '#2fb39a', 0]], notes: melody(), extra:
+          '<div class="gm-exp"><div class="gm-mh"><b class="ttl">내보내기</b><span class="sp"></span><span class="gm-x">' + svg('x') + '</span></div><div class="gm-sec">파일로 저장</div>' +
+          '<div class="gm-fmts"><b class="on">MP3<small>어디서나 재생</small></b><b data-k="stems">스템 (트랙별 WAV)<small>.zip · 트랙마다 따로</small></b><b>MIDI<small>트랙별 .mid</small></b><b>프로젝트<small>.json</small></b></div>' +
+          '<div class="gm-mf"><span class="sp"></span><span class="gm-btn">취소</span><span class="gm-btn pri" data-k="go">' + svg('mp') + '파일 저장</span></div></div>' +
+          '<div class="gm-prog"><span class="ring"><i></i><b data-v="pct">0%</b></span><span class="tx"><b>스템 만드는 중</b><small data-v="ptx">1 / 3 · 피아노</small><span class="bar"><i></i></span></span></div>' +
+          '<div class="gm-zip"><b>' + svg('mp') + '새 곡_스템.zip</b><span>01_피아노.wav</span><span>02_베이스.wav</span><span>03_드럼.wav</span><span>정보.txt</span></div>' +
+          '<div class="gm-daw"><div class="hd"><b>다른 DAW</b><span>0:00</span><span>0:04</span><span>0:08</span></div>' +
+          '<div class="ln" style="--c:#4a9eff"><i>01_피아노</i><s></s></div><div class="ln" style="--c:#ff8a3d"><i>02_베이스</i><s></s></div><div class="ln" style="--c:#2fb39a"><i>03_드럼</i><s></s></div></div>' });
+      },
+      script: [
+        { cap: '상단 오른쪽의 내보내기 버튼을 누른다', step: 0, click: '[data-k=exp]', fx: function (s) { s.q('.gm-exp').classList.add('show'); }, hold: 600 },
+        { cap: '「스템 (트랙별 WAV)」을 고른다', step: 1, click: '[data-k=stems]', fx: function (s) { s.qa('.gm-fmts b').forEach(function (b) { b.classList.toggle('on', b.dataset.k === 'stems'); }); }, hold: 600 },
+        { cap: '「파일 저장」 — 트랙을 하나씩 WAV로 만든다', step: 2, click: '[data-k=go]', fx: function (s) { s.q('.gm-exp').classList.remove('show'); stemProg(s, 2400); }, hold: 2700 },
+        { cap: 'ZIP 하나로 저장 — 같은 길이 · 0초 시작 · 정보.txt', step: 3, fx: function (s) { s.q('.gm-prog').classList.remove('show'); s.q('.gm-zip').classList.add('show'); toast(s, '스템 3개를 ZIP으로 저장했어요 (12.4MB)'); }, hold: 2200 },
+        { cap: '다른 DAW에서 모두 0초에 놓으면 원래 곡과 딱 맞는다', step: 4, fx: function (s) { s.q('.gm-zip').classList.remove('show'); s.q('.gm-daw').classList.add('show'); }, hold: 2600 }
+      ],
+      open: function () { var b = $id('midiBtn'); if (b) b.click(); setTimeout(function () { var f = document.querySelector('#xFmts .xf[data-f=stems]'); if (f) f.click(); }, 60); }
+    },
+    {
       id: 'loop', name: '반복 구간 · 마커', icon: 'loop', hue: ['#ffb84d', '#e0702a'], keys: ['L', 'M', ', .'], badge: 'NEW',
       line: '한 부분만 계속 · 이름표 붙이기',
       desc: '곡의 한 부분을 <b>계속 반복해 들으며 다듬고</b>, 인트로 · 코러스 같은 <b>이름표(마커)를 붙여 원하는 곳으로 바로 이동할 수 있도록</b> 하는 기능이다.',
@@ -293,6 +424,57 @@
   function toast(s, msg) {
     if (!s) return;
     var t = s.q('.gm-toast'); if (!t) return; t.textContent = msg; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  }
+  // ── MIDI 도구 장면
+  var MT_MEL = [[0, 8, 9], [8, 8, 8], [16, 8, 10], [24, 8, 9]];
+  function mtChord(s) { var h = ''; MT_MEL.forEach(function (m, i) { [2, 4, 6].forEach(function (d, k) { h += '<i class="gm-n pop ch sel" style="--s:' + m[0] + ';--l:' + m[1] + ';--r:' + (m[2] - d) + ';animation-delay:' + (i * 0.12 + k * 0.05) + 's"></i>'; }); }); s.q('.gm-notes').insertAdjacentHTML('beforeend', h); }
+  function mtArp(s) {
+    s.qa('.gm-n').forEach(function (n) { n.remove(); });
+    var h = ''; MT_MEL.forEach(function (m, i) { var rows = [m[2], m[2] - 2, m[2] - 4, m[2] - 6]; for (var k = 0; k < 8; k++) h += '<i class="gm-n pop sel" style="--s:' + (m[0] + k) + ';--l:1;--r:' + rows[k % 4] + ';animation-delay:' + ((i * 8 + k) * 0.025) + 's"></i>'; });
+    s.q('.gm-notes').insertAdjacentHTML('beforeend', h);
+  }
+  // ── 오토메이션 장면: 레인 위에 선 그리기 (가로 0~1 · 세로 0~1 = 아래~위)
+  function lanePt(s, fx, fy) { var r = s.rel(s.q('.gm-vel')); return [r.x + r.w * fx, r.y + 4 + (r.h - 8) * (1 - fy)]; }
+  function laneVal(s, p) { var r = s.rel(s.q('.gm-vel')); return [Math.max(0, Math.min(1, (p[0] - r.x) / r.w)), Math.max(0, Math.min(1, 1 - (p[1] - r.y - 4) / (r.h - 8)))]; }
+  function auInit(s, kind) {
+    var v = s.q('.gm-vel'); s._au = []; s._auK = kind;
+    v.innerHTML = '<svg class="gm-au" viewBox="0 0 100 100" preserveAspectRatio="none"><line class="base" x1="0" x2="100" y1="' + (kind === '팬' ? 50 : 20) + '" y2="' + (kind === '팬' ? 50 : 20) + '"/><polygon class="fill" points=""/><polyline class="ln" points=""/><line class="gd" x1="0" y1="0" x2="0" y2="0"/></svg><span class="gm-auT">' + kind + ' 오토메이션 — 끌어서 그리기</span>';
+    var h = s.q('.gm-velH'); h.innerHTML = '<span class="gm-lv">' + kind + ' ▾</span><span class="gm-lsel"><b>세기</b><b class="' + (kind === '볼륨' ? 'on' : '') + '">볼륨</b><b data-k="pan" class="' + (kind === '팬' ? 'on' : '') + '">팬</b><b>밝기</b></span>';
+  }
+  function auRender(s) {
+    var a = s._au.slice().sort(function (x, y) { return x[0] - y[0]; }), base = s._auK === '팬' ? 50 : 100;
+    var pts = a.map(function (p) { return (p[0] * 100).toFixed(2) + ',' + ((1 - p[1]) * 100).toFixed(2); }).join(' ');
+    s.q('.gm-au .ln').setAttribute('points', pts);
+    s.q('.gm-au .fill').setAttribute('points', a.length ? (a[0][0] * 100).toFixed(2) + ',' + base + ' ' + pts + ' ' + (a[a.length - 1][0] * 100).toFixed(2) + ',' + base : '');
+    var t = s.q('.gm-auT'); if (t && a.length) t.style.opacity = 0;
+  }
+  function auDraw(s, b) {
+    var v = laneVal(s, b), last = s._auLast;
+    if (last != null) { var lo = Math.min(last, v[0]), hi = Math.max(last, v[0]); s._au = s._au.filter(function (p) { return p[0] <= lo || p[0] >= hi; }); }
+    s._au = s._au.filter(function (p) { return Math.abs(p[0] - v[0]) > 0.004; }); s._au.push(v); s._auLast = v[0]; auRender(s);
+  }
+  function auGuide(s, a, b) { s._auLast = null; var A = laneVal(s, a), B = laneVal(s, b), g = s.q('.gm-au .gd'); g.setAttribute('x1', A[0] * 100); g.setAttribute('y1', (1 - A[1]) * 100); g.setAttribute('x2', B[0] * 100); g.setAttribute('y2', (1 - B[1]) * 100); g.classList.add('show'); s._ln = [A, B]; }
+  function auLineEnd(s) { var A = s._ln[0], B = s._ln[1]; s.q('.gm-au .gd').classList.remove('show'); s._au = s._au.filter(function (p) { return p[0] < A[0] || p[0] > B[0]; }); s._au.push(A, B); s._auLast = null; auRender(s); }
+  // ── 믹서 장면
+  function mixSl(s, k, p) { var sl = s.q('[data-k=' + k + ']'); if (sl) sl.style.setProperty('--p', Math.max(0, Math.min(1, p))); }
+  function fader(s, i, v) { var f = s.q('[data-k=f' + i + ']'); f.style.setProperty('--v', v); var db = v <= 0 ? -99 : 20 * Math.log10(v * 1.5); s.q('[data-v=f' + i + ']').textContent = (db >= 0 ? '+' : '') + db.toFixed(1); }
+  function meters(s, ms) {
+    var t0 = performance.now(), lv = [0.62, 0.48, 0.7];
+    var id = setInterval(function () {
+      if (s.dead || performance.now() - t0 > ms) { clearInterval(id); s.qa('.gm-mix .mt i').forEach(function (i) { i.style.height = '0%'; }); return; }
+      s.qa('.gm-mix .mt').forEach(function (m) { var k = +m.dataset.m; m.querySelectorAll('i').forEach(function (i) { var base = k === 3 ? 0.74 : lv[k] * (k === 1 ? +s.q('[data-k=f1]').style.getPropertyValue('--v') / 0.667 : 1); i.style.height = Math.round((base + (Math.random() - 0.5) * 0.18) * 100) + '%'; }); });
+      var e = (performance.now() - t0) / ms; s.q('[data-v=lm]').textContent = (-15.5 + Math.random() * 3).toFixed(1); s.q('[data-v=li]').textContent = (-14.8 + e * 0.6).toFixed(1); s.q('[data-v=pk]').textContent = (-2.4 + Math.random() * 0.8).toFixed(1);
+    }, 90);
+  }
+  // ── 스템 장면
+  function stemProg(s, ms) {
+    var p = s.q('.gm-prog'), t0 = performance.now(), names = ['피아노', '베이스', '드럼']; p.classList.add('show');
+    var id = setInterval(function () {
+      if (s.dead) { clearInterval(id); return; }
+      var e = Math.min(1, (performance.now() - t0) / ms), k = Math.min(2, Math.floor(e * 3));
+      p.style.setProperty('--p', e); s.q('[data-v=pct]').textContent = Math.round(e * 100) + '%'; s.q('[data-v=ptx]').textContent = (k + 1) + ' / 3 · ' + names[k];
+      if (e >= 1) clearInterval(id);
+    }, 40);
   }
   function pickCard(s, i) { s.qa('.gm-styles b').forEach(function (b) { b.classList.toggle('on', +b.dataset.i === i); }); }
   function seg(s, k) { s.qa('.gm-seg b').forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); }); }
@@ -533,12 +715,18 @@
     mount('#accModal .mhead', '#accClose', 'acc');
     mount('#stepModal .mhead', '#siClose', 'step');
     mount('#ntM .ntHead', '#ntClose', 'nt');
-    mount('#velHead', '#velClose', 'vel', true);
+    mount('#velHead .vhBtns', '#velClose', 'vel', true);
+    mount('#mtM .ntHead', '#mtClose', 'mt');
+    mount('#mixM .mxHead', '#mxClose', 'mix');
+    mount('#exportM .xhead', '#xClose', 'stem', true);
     var gb = $id('guideBtn'); if (gb) gb.onclick = function () { open(); };
     watch($id('accModal'), 'show', function () { bubble('acc', '#accModal .gdHelp'); });
     watch($id('stepModal'), 'show', function () { bubble('step', '#stepModal .gdHelp'); });
     watch($id('ntM'), 'show', function () { bubble('nt', '#ntM .gdHelp'); });
-    watch($id('editor'), 'velOn', function () { bubble('vel', '#velHead .gdHelp'); });
+    watch($id('editor'), 'velOn', function () { bubble($id('editor').classList.contains('auLane') ? 'auto' : 'vel', '#velHead .gdHelp'); });
+    watch($id('editor'), 'auLane', function () { bubble('auto', '#velHead .gdHelp'); });
+    watch($id('mtM'), 'show', function () { bubble('mt', '#mtM .gdHelp'); });
+    watch($id('mixM'), 'show', function () { bubble('mix', '#mixM .gdHelp'); });
     watch($id('midiInBtn'), 'on', function () { bubble('midi', '#midiInBtn'); });
     watch($id('loopBtn'), 'on', function () { bubble('loop', '#loopBtn'); });
     document.addEventListener('keydown', function (e) { if (e.key === 'F1' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); open(); } });

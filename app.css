@@ -231,6 +231,7 @@ canvas.viz{display:block;width:100%;height:104px;border-radius:9px;border:1px so
 body.engine .engOnly{display:flex!important}
 body.engine #mpHome,body.engine .lgName{display:none}
 body.engine .logo{pointer-events:none;cursor:default}
+body.engine #fsBtn,body.engine #mpFs,body.engine #siFs{display:none!important}   /* 엔진 창 안: 전체화면 버튼 없음 */
 .ib.engSave{background:var(--accent);color:#1a1500;border-color:var(--accent)}
 .ib.engSave:hover{background:#ffd95a}
 .ib.engSave.busy{opacity:.6;pointer-events:none}
@@ -2732,3 +2733,348 @@ body.rangePick #palette{visibility:hidden!important}
   #gdM .gd-hT{min-width:0}
   #gdM .gd-hT span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 }
+
+/* ═════════ 2026-11-26 모바일 정리: Safe Area(노치 · 홈 인디케이터 · 가로모드 시스템 인셋) · 겹침/줄바꿈 방지 ═════════ */
+:root{--sa-t:env(safe-area-inset-top,0px);--sa-r:env(safe-area-inset-right,0px);--sa-b:env(safe-area-inset-bottom,0px);--sa-l:env(safe-area-inset-left,0px)}
+
+/* 마이페이지: 화면 전체를 덮는 창이라 노치 · 홈 바 영역을 비켜서 배치 */
+#myPage{padding:var(--sa-t) var(--sa-r) 0 var(--sa-l)}
+.mpWrap{padding-bottom:calc(40px + var(--sa-b))}
+.mpStorage,#mpStoreTxt{white-space:nowrap}
+.mpStorage{min-width:0;flex:0 1 auto}
+@media (max-width:640px){
+  .mpWrap{padding-bottom:calc(28px + var(--sa-b))}
+  .mpStorage{flex:0 1 auto;gap:6px}
+  .mpStorage .bar{width:48px}
+  #mpStoreTxt{font-size:10.5px}
+}
+/* 마이페이지 머리줄: [로고 | 마이페이지 … | 사용법 · 불러오기 · 백업 · 새 곡] — 제목과 버튼이 겹치지 않게 */
+@media (max-width:900px), (orientation:portrait), (pointer:coarse) and (max-height:520px){
+  .mpHead{gap:8px}
+  .mpHead>span{display:none!important}
+  .mpHead>div:nth-child(2){flex:1 1 auto!important;min-width:0;overflow:hidden}
+  .mpTitle{overflow:hidden;text-overflow:ellipsis}
+  .mpHead .mpGuide{flex:none;width:44px;height:44px;padding:0;margin:0;justify-content:center;border-radius:11px}
+  .mpHead .mpGuide span{display:none}
+  .mpHead .mpGuide .gi{width:20px;height:20px}
+  .mpTop{gap:6px}
+  .mpTop .mpBrand{flex:none}
+}
+@media (max-width:400px){
+  .mpHead{gap:6px}
+  .avatar{width:40px;height:40px;border-radius:12px}
+  .mpHead .btn,.mpHead .mpGuide{width:40px!important;height:40px!important}
+  .mpTitle{font-size:16px}
+}
+@media (max-width:340px){
+  .avatar{display:none}
+}
+
+/* 스텝 입력 (모바일): 「보드에 넣기」를 아래 줄 가운데에 넓게 — [따로 | 보드에 넣기 | 묶음] */
+.siDock{display:none}
+@media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #stepModal .siDock{display:flex;align-items:stretch;gap:6px;min-width:0;flex:1 1 260px}
+  #stepModal .siDock .btn{min-width:0;justify-content:center;white-space:nowrap}
+  #stepModal .siDock #siExport,#stepModal .siDock #siExportB{flex:0 0 auto}
+  #stepModal .siDock #siExport .ssL,#stepModal .siDock #siExportB .ssL{display:none!important}
+  #stepModal .siDock #siCommit{flex:1 1 auto;order:0;min-height:44px;height:auto;padding:6px 14px;font-size:15px;font-weight:800;letter-spacing:.2px;
+    border-radius:12px;box-shadow:0 6px 18px rgba(242,194,48,.22)}
+  #stepModal .siDock #siExport{order:-1}
+  #stepModal .siDock #siExportB{order:1;background:var(--panel2,#1f2025);border-color:var(--accentLine);color:var(--accent);box-shadow:none}
+  /* 바로 입력이 켜져 「보드에 넣기」가 숨으면 내보내기 두 개가 줄을 반씩 나눠 가짐 (원래 모양) */
+  #stepModal.siAutoOn .siDock #siExport,#stepModal.siAutoOn .siDock #siExportB{flex:1 1 0}
+  #stepModal.siAutoOn .siDock #siExport .ssL,#stepModal.siAutoOn .siDock #siExportB .ssL{display:inline!important}
+  #stepModal.siAutoOn .siDock #siExportB{background:var(--accent);border-color:var(--accent);color:#1a1500}
+  /* 「지금 누른 음」 칸의 버튼 줄: 보드에 넣기가 빠진 자리는 쉼표 · 지우기가 채움 */
+  #stepModal .siNowFoot{min-width:0}
+}
+/* 폰 세로: 1줄 = [트랙 | 옥타브], 2줄 = 가운데 큰 「보드에 넣기」 */
+@media (max-width:600px) and (orientation:portrait){
+  #stepModal .siDock{flex:1 1 100%}
+  #stepModal .mfoot .siGrp{flex:1 1 130px}
+  #stepModal .mfoot .siGrp .siOct{flex:1;justify-content:space-between}
+  #stepModal .mfoot .siCap{white-space:nowrap;flex:none}
+  #stepModal .siDock #siCommit{min-height:48px;font-size:16px}
+  #stepModal .siDock #siExport,#stepModal .siDock #siExportB{min-width:64px;padding:6px 10px}
+}
+@media (max-width:340px) and (orientation:portrait){
+  #stepModal .mfoot .siGrp .siCap{display:none!important}
+  #stepModal .mfoot .af{flex:1 1 110px}
+}
+/* 가로(세로 공간이 모자람): 한 줄 = [트랙 | 옥타브 | 따로 · 보드에 넣기 · 묶음] */
+@media (max-width:760px) and (max-height:520px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #stepModal .mfoot{flex-wrap:nowrap}
+  #stepModal .mfoot .af{flex:0 1 170px}
+  #stepModal .siDock{flex:1 1 auto}
+  #stepModal .siDock #siCommit{min-height:34px;font-size:14px;padding:4px 14px}
+  #stepModal .siDock .btn{min-height:34px}
+}
+
+/* 화면 전체를 덮는 창(모바일): 노치 · 홈 바 영역 비키기 */
+@media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  .smCard,#setM .smCard{padding:var(--sa-t) var(--sa-r) var(--sa-b) var(--sa-l)}
+  #scoreM .scCard,#rollM .prCard{padding:var(--sa-t) var(--sa-r) 0 var(--sa-l)}
+}
+#toast{bottom:calc(78px + var(--sa-b))}
+#exportM,#help,#confirm,#modal{padding:max(12px,var(--sa-t)) max(12px,var(--sa-r)) max(12px,var(--sa-b)) max(12px,var(--sa-l))}
+#gdM{padding:max(20px,var(--sa-t)) max(20px,var(--sa-r)) max(20px,var(--sa-b)) max(20px,var(--sa-l))}
+@media (max-width:820px){ #gdM{padding:var(--sa-t) var(--sa-r) var(--sa-b) var(--sa-l)} }
+
+/* 스텝 입력 — 작은 가로 화면(아이폰 SE 가로 등): 머리줄이 넘쳐 닫기 버튼이 밀려나지 않게 */
+@media (max-width:760px) and (max-height:520px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #stepModal .scard .mhead{min-width:0}
+  #stepModal .mhead>*{flex-shrink:0}
+  #stepModal .mhead .siStepBar{flex:0 0 auto;min-width:44px;max-width:170px;overflow:hidden}
+  #stepModal .mhead .siCurInfo{display:none}
+  #stepModal .mhead .siCurName{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  #stepModal .mhead .siBoardHead #siPlay{order:-1}
+  #stepModal .mhead .siBoardHead{flex:0 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent)}
+  #stepModal .mhead .siBoardHead::-webkit-scrollbar{display:none}
+  #stepModal .mhead .siBoardHead>*{flex:none}
+  #stepModal .mhead .siBoardHead{justify-content:flex-start}
+  #stepModal .mhead>span[style*="flex:1"]{flex:1 1 0;min-width:0}
+  #stepModal.siAutoOn .siDock #siExport .ssL,#stepModal.siAutoOn .siDock #siExportB .ssL{display:none!important}
+  #stepModal .mfoot{min-width:0}
+}
+@media (max-width:700px) and (max-height:520px) and (orientation:landscape){
+  #stepModal #siPlay{font-size:0;gap:0;padding:0 9px}
+  #stepModal .mhead .siBoardHead #siPlay{order:-1}
+  #stepModal .mfoot .af{flex:0 1 128px}
+  #stepModal .mfoot .siGrp .siCap{display:none!important}
+  #stepModal:not(.siAutoOn) .siDock #siExport>span:last-child,#stepModal:not(.siAutoOn) .siDock #siExportB>span:last-child{display:none}
+  #stepModal:not(.siAutoOn) .siDock #siExport,#stepModal:not(.siAutoOn) .siDock #siExportB{width:40px;padding:0;gap:0}
+  #stepModal .siDock{flex:1 1 200px}
+  #stepModal #siPlay svg{width:15px;height:15px}
+  #stepModal .mhead .siSwitch span{font-size:11px}
+  #stepModal .mhead .gdHelp{width:30px;padding:0;justify-content:center}
+  #stepModal .mhead .gdHelp span{display:none}
+}
+
+/* 편집 화면 — 아주 좁은 폰(≤360px): 곡 이름이 찌그러지거나 「편집」 버튼이 밖으로 밀려나지 않게 */
+@media (max-width:760px){
+  #topbar .songName{min-width:54px}
+  #editBar #ebFab{position:sticky;right:0;z-index:1;box-shadow:-8px 0 10px -4px var(--panel,#121316)}
+}
+@media (max-width:360px){
+  #editBar{gap:3px;padding:4px}
+  #editBar .ib{min-width:26px}
+  #editBar #ebFab{min-width:42px;padding:0 7px}
+  #topbar{gap:3px}
+  #topbar .pill{padding:1px;gap:0}
+  #topbar .ib{min-width:28px}
+}
+
+/* 스텝 입력 (모바일): 「바로 입력」 스위치 → 작은 칩 하나로 (트랙+글자 ≈110px → ≈58px)
+   꺼짐 = 회색 점 · 켜짐 = 노란 점 + 노란 테두리. 글자는 화면에 '바로'만, 읽기 프로그램에는 '바로 입력' 그대로 */
+@media (max-width:760px), (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  #stepModal .siSwitch{position:relative;gap:0;height:30px;padding:0 9px 0 8px;border-radius:9px;flex:none;
+    border:1px solid var(--line2,#30333a);background:rgba(255,255,255,.03);transition:background .15s,border-color .15s,color .15s}
+  #stepModal .siSwitch i{display:none}
+  #stepModal .siSwitch span{font-size:0!important;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  #stepModal .siSwitch span::before{content:"";width:7px;height:7px;border-radius:50%;background:#6b707a;flex:none;transition:background .15s,box-shadow .15s}
+  #stepModal .siSwitch span::after{content:"바로";font-size:12px;font-weight:800;letter-spacing:.2px}
+  #stepModal .siSwitch:has(input:checked){border-color:var(--accentLine);background:var(--accentDim);color:var(--accent)}
+  #stepModal .siSwitch input:checked~span{color:var(--accent)}
+  #stepModal .siSwitch input:checked~span::before{background:var(--accent);box-shadow:0 0 0 3px rgba(242,194,48,.18)}
+  #stepModal .siSwitch:active{transform:scale(.96)}
+  #stepModal .siSwitch:has(input:focus-visible){outline:2px solid var(--accentLine);outline-offset:1px}
+}
+#mtM{position:fixed;inset:0;z-index:110;display:none;align-items:flex-end;justify-content:center;padding:16px;background:rgba(5,6,8,.18)}
+#mtM.show{display:flex}
+#mtM .ntCard{width:min(580px,100%);display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#1d1f24,#15161a);border:1px solid var(--accentLine);box-shadow:0 14px 40px rgba(0,0,0,.6),var(--glow);margin-bottom:calc(env(safe-area-inset-bottom,0px) + 70px)}
+#mtM .ntHead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #26282e}
+#mtM .ntBody{padding:12px 16px 6px;display:flex;flex-direction:column;gap:10px}
+#mtM .ntPane{display:flex;flex-direction:column;gap:10px}
+#mtM .ntPane[hidden]{display:none}
+#mtM .ntRow{display:grid;grid-template-columns:190px minmax(0,1fr) 62px;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:var(--text)}
+#mtM .ntL{display:flex;flex-direction:column;line-height:1.25}
+#mtM .ntL small{font-size:10.5px;font-weight:500;color:var(--muted)}
+#mtM select{height:32px;font-size:12.5px}
+#mtM .ntRow2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#mtM .ntChk{font-size:12px;padding:2px 0}
+#mtM .ntFoot{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid #26282e}
+#mtM .ntInfo{flex:1;min-width:0;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){#mtM{padding:8px}#mtM .ntCard{margin-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}#mtM .ntRow{grid-template-columns:96px minmax(0,1fr) 52px}#mtM .ntL small{display:none}#mtM .ntFoot{flex-wrap:wrap}#mtM .ntInfo{order:-1;flex-basis:100%}}
+#mtM .ntCard{background:var(--panel2)!important;box-shadow:0 18px 50px rgba(0,0,0,.55)!important;border-color:var(--line2)!important}
+#mtM .ntCard{border-radius:12px}
+#mtM{background:rgba(8,8,10,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#mtM .ntCard{background:var(--win)!important;border:1px solid var(--winLine)!important;border-radius:var(--winR);box-shadow:var(--winShadow)!important}
+#mtM .ntHead{background:var(--winHead);border-bottom:1px solid var(--winLine);border-radius:var(--winR) var(--winR) 0 0;padding:12px 14px}
+#mtM .ntFoot{background:var(--winFoot);border-top:1px solid var(--winLine);border-radius:0 0 var(--winR) var(--winR);padding:12px 14px}
+/* ───────── 믹서 (X) ───────── */
+#mixM{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 66px);z-index:95;display:none;justify-content:center;pointer-events:none}
+#mixM.show{display:flex;animation:mxUp .22s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes mxUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#mixM .mxCard{pointer-events:auto;width:min(1180px,100%);height:min(430px,calc(100vh - 150px));display:flex;flex-direction:column;background:var(--win,#18181a);border:1px solid var(--winLine,#303033);border-radius:var(--winR,16px);box-shadow:var(--winShadow,0 18px 50px rgba(0,0,0,.55));overflow:hidden}
+#mixM .mxHead{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--winHead,#1d1d20);border-bottom:1px solid var(--winLine,#303033)}
+#mixM .mxTitle{display:flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap}
+#mixM .mxTitle svg{width:17px;height:17px;color:var(--accent)}
+#mixM .mxSub{font-size:11.5px;color:var(--muted);white-space:nowrap}
+#mixM .mxHead .ib{width:30px;height:30px}
+#mixM .mxBody{flex:1;min-height:0;display:flex;gap:0}
+#mixM .mxStrips{flex:1;min-width:0;display:flex;gap:6px;padding:10px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+#mixM .mxStrip,#mixM .mxMaster{flex:none;width:124px;display:flex;flex-direction:column;gap:6px;padding:7px 7px 8px;border-radius:12px;background:#141416;border:1px solid #26262a;position:relative}
+#mixM .mxStrip::before{content:"";position:absolute;left:10px;right:10px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--tc,#888)}
+#mixM .mxStrip.on{border-color:var(--accentLine);background:#17160f}
+#mixM .mxStrip.silent{opacity:.5}
+#mixM .mxName{display:flex;align-items:center;gap:5px;min-width:0;padding:4px 4px 3px;border:0;background:none;color:var(--text);font:700 11.5px system-ui,sans-serif;cursor:pointer;border-radius:7px;text-align:left}
+#mixM .mxName:hover{background:#1e1e21}
+#mixM .mxIc svg{width:14px;height:14px;color:var(--tc,#888);flex:none}
+#mixM .mxNm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mixM .mxKnobs{display:flex;flex-direction:column;gap:4px}
+#mixM .mxSec{display:flex;flex-direction:column;gap:0;padding:3px 5px 2px;border-radius:8px;background:#101012}
+#mixM .mxSecT{font-size:9px;font-weight:800;letter-spacing:.04em;color:#6c6a66;margin-bottom:1px}
+#mixM .mxRow{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;align-items:center;column-gap:3px;height:17px;font-size:10px;color:var(--muted);cursor:pointer}
+#mixM .mxRow .mxL{font-weight:700;white-space:nowrap}
+#mixM .mxRow input{height:13px;width:100%}
+#mixM .mxRow input::-webkit-slider-thumb{width:11px;height:11px;margin-top:-3px}
+#mixM .mxRow input::-webkit-slider-runnable-track{height:4px}
+#mixM .mxV{font:600 9px ui-monospace,monospace;color:#8e8b85;line-height:1;text-align:right}
+#mixM .mxRow.act .mxL,#mixM .mxRow.act .mxV{color:var(--accent)}
+#mixM .mxMS{display:flex;gap:4px}
+#mixM .mxMS .ms{flex:1;height:22px;border-radius:6px;border:1px solid var(--line2);background:var(--panel2);color:var(--muted);font:800 11px system-ui,sans-serif;cursor:pointer}
+#mixM .mxMS .ms.m.on{background:#3a2a10;color:#ffb84d;border-color:#7a5a20}
+#mixM .mxMS .ms.s.on{background:#10283a;color:#6ec3ff;border-color:#205a7a}
+#mixM .mxFW{flex:1;min-height:96px;display:flex;gap:6px;justify-content:center}
+#mixM .mxFader{position:relative;width:30px;cursor:ns-resize;touch-action:none}
+#mixM .mxFTr{position:absolute;left:50%;top:6px;bottom:6px;width:6px;margin-left:-3px;border-radius:4px;background:linear-gradient(0deg,var(--accent) 0,var(--accent) var(--p,66%),#2a2a2e var(--p,66%));box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+#mixM .mxFTr::after{content:"";position:absolute;left:-8px;right:-8px;bottom:calc(66.66% - .5px);height:1px;background:rgba(255,255,255,.35)}
+#mixM .mxFTh{position:absolute;left:50%;width:26px;height:18px;margin-left:-13px;border-radius:5px;background:linear-gradient(180deg,#eceae4,#a9a6a0);border:1px solid #0c0c0d;box-shadow:0 2px 6px rgba(0,0,0,.6);cursor:grab}
+#mixM .mxFTh::after{content:"";position:absolute;left:4px;right:4px;top:8px;height:2px;background:#2a2a2e;border-radius:1px}
+#mixM .mxMt{width:12px;height:auto;border-radius:3px;flex:none;align-self:stretch}
+#mixM .mxMtM{width:22px;cursor:pointer}
+#mixM .mxDb{text-align:center;font:700 10.5px ui-monospace,monospace;color:var(--text)}
+#mixM .mxMaster{width:150px;margin:10px 10px 10px 0;background:linear-gradient(180deg,#1b190f,#121213);border-color:var(--accentLine)}
+#mixM .mxMN{cursor:default;color:var(--accent);justify-content:center;font-size:12px}
+#mixM .mxLufs{display:flex;flex-direction:column;gap:3px;padding:5px 6px;border-radius:8px;background:#0d0d0e}
+#mixM .mxLufs div{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:4px;align-items:baseline}
+#mixM .mxLufs span{grid-column:1/3;font-size:9px;font-weight:700;color:#6c6a66}
+#mixM .mxLufs b{font:800 15px ui-monospace,monospace;color:var(--text);line-height:1.05}
+#mixM .mxLufs b.hot{color:#ff5a4d}
+#mixM .mxLufs small{font-size:9px;color:var(--muted)}
+#mixM .mxLim{justify-content:center;gap:6px;padding:5px 8px;font-size:11.5px;font-weight:800}
+#mixM .mxLim i{width:8px;height:8px;border-radius:50%;background:#3a3a3e}
+#mixM .mxLim.on{border-color:var(--accentLine);color:var(--accent)}
+#mixM .mxLim.on i{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+#mixM .mxFWm{min-height:120px}
+#mixM .mxFoot{padding:7px 12px;font-size:10.5px;color:var(--muted);background:var(--winFoot,#161618);border-top:1px solid var(--winLine,#303033);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mixBtn.on,#mtBtn.on{color:var(--accent)}
+@media (max-width:760px){
+  #mixM{left:6px;right:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}
+  #mixM .mxCard{height:min(620px,calc(100vh - 80px));max-height:none}
+  #mixM .mxBody{flex-direction:column;overflow-y:auto}
+  #mixM .mxStrips{padding:8px;min-height:360px}
+  #mixM .mxMaster{width:auto;margin:0 8px 8px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto 120px auto}
+  #mixM .mxMaster .mxName{grid-column:1/3}#mixM .mxMaster .mxLufs{grid-column:1/3;flex-direction:row;justify-content:space-between}
+  #mixM .mxMaster .mxLim{grid-column:1/3}#mixM .mxMaster .mxFW{grid-column:1/3}#mixM .mxMaster .mxDb{grid-column:1/3}
+  #mixM .mxFoot{display:none}
+  #mixM #mxReset{display:none}
+}
+
+/* 오토메이션 레인 (레인 머리: 종류 고르기 · 지우기 · 닫기) */
+#editor.velOn #velHead{padding:4px 5px;gap:5px}
+#velHead select{width:100%;max-width:94px;height:24px;padding:0 4px;font-size:11px;font-weight:800;border-radius:7px}
+#velHead .vhBtns{display:flex;gap:4px}
+#velHead #laneClr:disabled{opacity:.35;cursor:default}
+#editor.auLane #velWrap canvas{cursor:crosshair}
+@media (max-width:760px){ #velHead select{font-size:10px;padding:0 2px} #velHead .vhBtns .ib{width:20px;height:20px} }
+
+/* MIDI 도구 (N) — 노트 다듬기 창과 같은 모양 */
+#mtM .atabs{overflow-x:auto;scrollbar-width:none}
+#mtM .atab{white-space:nowrap}
+#mtM .ntRow[hidden]{display:none}
+
+/* ───────── 기능 가이드: MIDI 도구 · 오토메이션 · 믹서 · 스템 장면 ───────── */
+#gdM .gm-ic{display:grid;place-items:center;width:24px;height:22px;border-radius:7px;color:#c9cdd5;background:#1b1d22;border:1px solid #2a2c33}
+#gdM .gm-ic .gi{width:13px;height:13px}
+#gdM .gm-pill .gi{width:12px;height:12px}
+#gdM .gm-mt{position:absolute;left:292px;right:12px;bottom:46px;z-index:20;padding:9px 11px;border-radius:12px;background:linear-gradient(180deg,#1d1f24,#16171b);border:1px solid rgba(94,224,192,.5);box-shadow:0 14px 40px rgba(0,0,0,.6);opacity:0;transform:translateY(14px);transition:all .3s;pointer-events:none}
+#gdM .gm-mt.show{opacity:1;transform:none}
+#gdM .gm-mt .gm-tab{padding:3px 8px}
+#gdM .gm-mt .gm-tab.on{background:#5ee0c0;color:#05241c}
+#gdM .gm-mt .gm-row{grid-template-columns:40px 1fr auto}
+#gdM .gm-mt .gm-ra{display:none}
+#gdM .gm-mt.arp .gm-rc{display:none}
+#gdM .gm-mt.arp .gm-ra{display:grid}
+#gdM .gm-mt .gm-row em{color:#5ee0c0}
+#gdM .gm-ddm{left:48px}
+#gdM .gm-ddm b:nth-child(2){background:#5ee0c0;color:#05241c}
+#gdM .gm-n.ch{background:#5ee0c0}
+#gdM .gm-roll.velOn .gm-velH{position:relative;overflow:visible;z-index:6}
+#gdM .gm-lv{padding:2px 6px;border-radius:6px;background:#0f1013;border:1px solid #2e3138;font-size:8.5px;font-weight:900;color:#fff;white-space:nowrap}
+#gdM .gm-lsel{position:absolute;left:2px;bottom:calc(100% - 10px);display:none;flex-direction:column;min-width:60px;padding:3px;border-radius:8px;background:#22242a;border:1px solid #3a3d45;box-shadow:0 8px 20px rgba(0,0,0,.5);z-index:8}
+#gdM .gm-lsel.show{display:flex}
+#gdM .gm-lsel b{padding:3px 7px;border-radius:5px;font-size:9px;font-weight:700;color:#c9cdd5}
+#gdM .gm-lsel b.on{background:#ff9f5a;color:#2a1200}
+#gdM .gm-au{position:absolute;inset:4px 0;width:100%;height:calc(100% - 8px);overflow:visible}
+#gdM .gm-au .base{stroke:rgba(242,194,48,.35);stroke-width:1;vector-effect:non-scaling-stroke}
+#gdM .gm-au .ln{fill:none;stroke:#ff9f5a;stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+#gdM .gm-au .fill{fill:rgba(255,159,90,.18)}
+#gdM .gm-au .gd{stroke:#f2c230;stroke-width:1.5;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;opacity:0}
+#gdM .gm-au .gd.show{opacity:1}
+#gdM .gm-auT{position:absolute;left:8px;top:5px;font-size:8.5px;font-weight:700;color:#6f747e;transition:opacity .3s}
+#gdM .gm-mix{position:absolute;left:104px;right:0;top:108px;bottom:40px;z-index:20;display:flex;flex-direction:column;background:linear-gradient(180deg,#1b1c20,#141518);border-top:1px solid rgba(110,195,255,.5);box-shadow:0 -12px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none}
+#gdM .gm-mix.show{opacity:1;transform:none}
+#gdM .gm-mixH{display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-bottom:1px solid #26282e;font-size:9px;color:#8b909a}
+#gdM .gm-mixH>b{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#fff}
+#gdM .gm-mixH .gi{width:12px;height:12px;color:#6ec3ff}
+#gdM .gm-mixB{flex:1;min-height:0;display:flex;gap:5px;padding:6px}
+#gdM .gm-ch{position:relative;flex:1;display:flex;flex-direction:column;gap:2px;padding:5px 6px 4px;border-radius:9px;background:#111215;border:1px solid #25272d;min-width:0}
+#gdM .gm-ch::before{content:"";position:absolute;left:8px;right:8px;top:0;height:2px;background:var(--tc,#888);border-radius:0 0 2px 2px}
+#gdM .gm-ch .nm{font-size:9px;color:#fff;margin-bottom:1px}
+#gdM .gm-ch .r{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:3px;height:10px}
+#gdM .gm-ch .r>i{font-style:normal;font-size:7px;font-weight:700;color:#8b909a}
+#gdM .gm-mix .gm-sl{height:3px}
+#gdM .gm-mix .gm-sl i{background:#6ec3ff}
+#gdM .gm-mix .gm-sl b{width:8px;height:8px;margin:-4px 0 0 -4px;box-shadow:0 0 0 2px rgba(110,195,255,.35)}
+#gdM .gm-ch .ms{display:flex;gap:3px;margin:2px 0}
+#gdM .gm-ch .ms b{flex:1;height:12px;border-radius:4px;display:grid;place-items:center;font-size:7px;color:#8b909a;background:#1b1d22;border:1px solid #2a2c33}
+#gdM .gm-ch .fw{flex:1;min-height:0;display:flex;justify-content:center;gap:5px}
+#gdM .gm-ch .fd{--v:.667;position:relative;width:14px}
+#gdM .gm-ch .fd::before{content:"";position:absolute;left:5px;width:4px;top:2px;bottom:2px;border-radius:2px;background:linear-gradient(0deg,#f2c230 calc(var(--v)*100%),#2a2c33 calc(var(--v)*100%))}
+#gdM .gm-ch .fd u.lo{position:absolute;left:-2px;right:-2px;bottom:66.7%;height:1px;background:rgba(255,255,255,.35)}
+#gdM .gm-ch .fd b{position:absolute;left:0;width:14px;height:9px;bottom:calc(var(--v)*100% - 4.5px);border-radius:3px;background:linear-gradient(#eceae4,#a9a6a0);border:1px solid #0c0c0d;z-index:2}
+#gdM .gm-ch .mt{display:flex;gap:2px;width:6px;align-items:flex-end;background:#0b0c0e;border-radius:2px;overflow:hidden}
+#gdM .gm-ch .mt.two{width:12px}
+#gdM .gm-ch .mt i{flex:1;height:0;background:linear-gradient(0deg,#2fbf71,#8fd14f 55%,#f2c230 80%,#ff5a3d);transition:height .09s}
+#gdM .gm-ch>em{font-style:normal;text-align:center;font:700 8px ui-monospace,monospace;color:#c9cdd5}
+#gdM .gm-mst{flex:1.25;border-color:rgba(242,194,48,.4);background:linear-gradient(180deg,#1b190f,#111215)}
+#gdM .gm-mst .nm{color:#f2c230;text-align:center}
+#gdM .gm-mst .lu{display:grid;grid-template-columns:1fr auto;gap:0 4px;padding:3px 5px;border-radius:6px;background:#0b0c0e}
+#gdM .gm-mst .lu i{font-style:normal;font-size:7px;color:#8b909a}
+#gdM .gm-mst .lu b{font:800 9px ui-monospace,monospace;color:#fff;text-align:right}
+#gdM .gm-mst .lim{font-size:8px;font-weight:800;color:#f2c230;text-align:center;margin:2px 0}
+#gdM .gm-exp{position:absolute;left:150px;right:120px;top:64px;z-index:20;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,#1d1f24,#16171b);border:1px solid rgba(182,227,90,.45);box-shadow:0 14px 40px rgba(0,0,0,.6);opacity:0;transform:translateY(12px) scale(.98);transition:all .28s;pointer-events:none}
+#gdM .gm-exp.show{opacity:1;transform:none}
+#gdM .gm-exp .ttl{font-size:11px;color:#fff}
+#gdM .gm-fmts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#gdM .gm-fmts b{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:9px;background:#15161a;border:1px solid #2a2c33;font-size:10px;color:#fff;transition:all .2s}
+#gdM .gm-fmts b small{font-size:8px;font-weight:600;color:#8b909a}
+#gdM .gm-fmts b.on{border-color:#b6e35a;box-shadow:0 0 0 2px rgba(182,227,90,.25);background:#1a1d12}
+#gdM .gm-prog{--p:0;position:absolute;left:50%;top:150px;z-index:21;display:flex;align-items:center;gap:12px;width:280px;margin-left:-140px;padding:12px 14px;border-radius:14px;background:#1b1d22;border:1px solid #33363e;box-shadow:0 14px 40px rgba(0,0,0,.6);opacity:0;transform:scale(.96);transition:all .25s;pointer-events:none}
+#gdM .gm-prog.show{opacity:1;transform:none}
+#gdM .gm-prog .ring{position:relative;width:44px;height:44px;border-radius:50%;background:conic-gradient(#b6e35a calc(var(--p)*360deg),#2a2c33 0);flex:none}
+#gdM .gm-prog .ring i{position:absolute;inset:5px;border-radius:50%;background:#1b1d22}
+#gdM .gm-prog .ring b{position:absolute;inset:0;display:grid;place-items:center;font:800 10px ui-monospace,monospace;color:#fff}
+#gdM .gm-prog .tx{flex:1;display:flex;flex-direction:column;gap:3px}
+#gdM .gm-prog .tx b{font-size:11px;color:#fff}
+#gdM .gm-prog .tx small{font-size:9px;color:#8b909a}
+#gdM .gm-prog .bar{height:4px;border-radius:2px;background:#2a2c33;overflow:hidden}
+#gdM .gm-prog .bar i{display:block;height:100%;width:calc(var(--p)*100%);background:#b6e35a}
+#gdM .gm-zip{position:absolute;left:50%;top:110px;z-index:21;width:230px;margin-left:-115px;display:flex;flex-direction:column;gap:3px;padding:11px 13px;border-radius:13px;background:#1b1d22;border:1px solid rgba(182,227,90,.5);box-shadow:0 14px 40px rgba(0,0,0,.6);opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+#gdM .gm-zip.show{opacity:1;transform:none}
+#gdM .gm-zip b{display:flex;align-items:center;gap:5px;font-size:11px;color:#fff;margin-bottom:3px}
+#gdM .gm-zip b .gi{width:14px;height:14px;color:#b6e35a}
+#gdM .gm-zip span{padding:3px 8px;border-radius:6px;background:#121316;font:600 9px ui-monospace,monospace;color:#c9cdd5}
+#gdM .gm-daw{position:absolute;left:104px;right:0;top:34px;bottom:40px;z-index:22;padding:10px 12px;background:#0f1013;opacity:0;transition:opacity .35s;pointer-events:none}
+#gdM .gm-daw.show{opacity:1}
+#gdM .gm-daw .hd{display:flex;align-items:center;gap:0;height:20px;margin-bottom:8px;border-bottom:1px solid #2a2c33;font:700 8px ui-monospace,monospace;color:#8b909a}
+#gdM .gm-daw .hd b{width:90px;font:800 10px system-ui,sans-serif;color:#fff}
+#gdM .gm-daw .hd span{flex:1;border-left:1px solid #2a2c33;padding-left:4px}
+#gdM .gm-daw .ln{position:relative;display:flex;align-items:center;height:44px;margin-bottom:8px}
+#gdM .gm-daw .ln i{width:90px;flex:none;font-style:normal;font-size:9px;font-weight:800;color:var(--c)}
+#gdM .gm-daw .ln s{flex:1;height:100%;border-radius:7px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--c) 70%,transparent) 0 2px,transparent 2px 5px),color-mix(in srgb,var(--c) 18%,#121316);border:1px solid var(--c);-webkit-mask:linear-gradient(90deg,#000 85%,rgba(0,0,0,.35));mask:linear-gradient(90deg,#000 85%,rgba(0,0,0,.35));transform:translateX(60px);opacity:0;transition:transform .6s cubic-bezier(.2,.9,.3,1.1),opacity .4s}
+#gdM .gm-daw.show .ln s{transform:none;opacity:1}
+#gdM .gm-daw.show .ln:nth-child(3) s{transition-delay:.15s}
+#gdM .gm-daw.show .ln:nth-child(4) s{transition-delay:.3s}

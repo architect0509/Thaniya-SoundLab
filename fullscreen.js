@@ -10,7 +10,10 @@
   var de = document.documentElement;
   var reqFn = de.requestFullscreen || de.webkitRequestFullscreen;
   var exitFn = document.exitFullscreen || document.webkitExitFullscreen;
-  var canFs = !!reqFn;
+  // Thaniya Engine 창 안(?engine=1 로 iframe 에 들어감)에서는 전체화면을 쓰지 않아요 — 버튼 숨김 · 자동 복귀 끔
+  var EMBED = (function () { try { return /[?&]engine(=|&|$)/.test(location.search) && window.parent !== window; } catch (e) { return true; } })();
+  if (EMBED) { try { sessionStorage.removeItem(KEY); } catch (e) {} }
+  var canFs = !!reqFn && !EMBED;
   var isFs = function () { return !!(document.fullscreenElement || document.webkitFullscreenElement); };
 
   var want = {
@@ -63,6 +66,7 @@
 
   function bind(el, opts) {
     if (!el) return;
+    if (EMBED) { el.hidden = true; el.style.display = 'none'; return; }
     opts = opts || {};
     buttons.push({ el: el, opts: opts });
     el.addEventListener('click', function (e) { e.preventDefault(); toggle(opts.notify); });
@@ -105,6 +109,6 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showHint); else showHint();
   }
 
-  window.TSFS = { canFs: canFs, isFs: isFs, toggle: toggle, bind: bind, onChange: onChange, icons: { enter: ICON_IN, exit: ICON_OUT } };
+  window.TSFS = { embedded: EMBED, canFs: canFs, isFs: isFs, toggle: toggle, bind: bind, onChange: onChange, icons: { enter: ICON_IN, exit: ICON_OUT } };
   window.dispatchEvent(new Event('tsl-fs-ready'));
 })();

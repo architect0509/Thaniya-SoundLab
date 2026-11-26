@@ -664,7 +664,7 @@ expM.innerHTML = `<div class="xcard" role="dialog" aria-label="내보내기">
 </div>`;
 document.body.appendChild(expM);
 let expId = null;
-const EXP_FMT = [['mp3', 'MP3', '오디오 파일 · 어디서나 재생', 'music'], ['midi', 'MIDI', '트랙별 .mid · 다른 프로그램에서 편집', 'note'], ['json', '프로젝트 파일', '.json · 나중에 다시 불러와서 편집', 'download']];
+const EXP_FMT = [['mp3', 'MP3', '오디오 파일 · 어디서나 재생', 'music'], ['stems', '스템 (트랙별 WAV)', '.zip · 트랙마다 따로 · 다른 DAW에서 믹스', 'layers'], ['midi', 'MIDI', '트랙별 .mid · 다른 프로그램에서 편집', 'note'], ['json', '프로젝트 파일', '.json · 나중에 다시 불러와서 편집', 'download']];
 function expSec(id) {
   const p = lsGet(PROJ(id)), notes = (p && p.notes) || [];
   const end = notes.reduce((a, n) => Math.max(a, n.s + n.l), 0);
@@ -700,6 +700,7 @@ $('xGo').onclick = () => {
   const id = expId; lsSet(EXP_KEY, expPrefs); closeExport();
   if (expPrefs.fmt === 'json') exportProjectById(id, 'json');
   else if (expPrefs.fmt === 'midi') exportProjectById(id, 'midi');
+  else if (expPrefs.fmt === 'stems') goPage(PG_EDIT, '?open=' + encodeURIComponent(id) + '&export=stems');   // 스템도 편집 화면의 소리 엔진으로 만들어요
   else goPage(PG_EDIT, '?open=' + encodeURIComponent(id) + '&export=mp3&kbps=' + expPrefs.kbps);   // MP3는 편집 화면의 소리 엔진으로 만들어요
 };
 
