@@ -21,7 +21,12 @@
     loop: '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
     midi: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M7 6v7M12 6v7M17 6v7"/><circle cx="19" cy="3" r="1.2" fill="currentColor"/>',
     mp: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 18v-6M9 15l3 3 3-3"/>',
-    play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/>',
+    // 재생 막대 아이콘 = 편집 화면(app.js)과 같은 모양
+    home: '<path d="M6 5v14"/><path d="M18.5 5.5v13L9 12z" fill="currentColor" stroke="none"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/>',
+    play: '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>',
+    rec: '<circle cx="12" cy="12" r="6.5" fill="currentColor" stroke="none"/>',
+    dot: '<circle cx="12" cy="12" r="5.5" fill="currentColor" stroke="none"/>',
     pause: '<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>',
     redo: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -56,9 +61,9 @@
       '<div class="gm-grid"><div class="gm-notes">' + (o.notes || '') + '</div><div class="gm-ph"></div><div class="gm-lasso"></div></div>' +
       '<div class="gm-velH">세기</div><div class="gm-vel"></div>' +
       '</div></div>' +
-      '<div class="gm-trans"><span class="gm-tb">⏮</span><span class="gm-tb" data-k="stop">■</span><span class="gm-tb play" data-k="play">' + svg('play') + '</span><span class="gm-tb rec">●</span>' +
+      '<div class="gm-trans"><span class="gm-tb">' + svg('home') + '</span><span class="gm-tb" data-k="stop">' + svg('stop') + '</span><span class="gm-tb play" data-k="play">' + svg('play') + '</span><span class="gm-tb rec">' + svg('rec') + '</span>' +
       '<span class="gm-pos">1.1.1</span><span class="gm-bpm">BPM <b>100</b></span>' +
-      '<span class="gm-tb" data-k="loop">' + svg('loop') + '</span><span class="gm-tb" data-k="midi">' + svg('midi') + '</span><span class="gm-tb gm-midiRec" data-k="mrec">● MIDI</span><span class="sp"></span>' +
+      '<span class="gm-tb" data-k="loop">' + svg('loop') + '</span><span class="gm-tb" data-k="midi">' + svg('midi') + '</span><span class="gm-tb gm-midiRec" data-k="mrec">' + svg('dot') + 'MIDI</span><span class="sp"></span>' +
       '<span class="gm-meter"><i></i></span></div>' +
       (o.extra || '') + '<div class="gm-toast"></div></div>';
   }

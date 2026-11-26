@@ -4,7 +4,7 @@
  * - VERSION 은 install/update/release.js 가 새 버전을 낼 때 자동으로 바꿔요
  * - 새 버전 알림은 install/update/ 의 Update Notifier 가 version.json 을 보고 띄워요
  */
-const VERSION = 'v1.3.0-202611260559';
+const VERSION = 'v1.3.1-202611260746';
 const CACHE = 'tsl-' + VERSION;
 const FONT_CACHE = 'tsl-fonts';
 

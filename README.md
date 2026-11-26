@@ -34,7 +34,8 @@ Thaniya-SoundLab/
 │  └─ update/              changelog.json · release.js · version.json …
 └─ docs/
    ├─ CHANGELOG.md         변경 내역 (깃허브용)
-   └─ CHANGELOG-v1.3.0.txt 버전별 텍스트 로그
+   ├─ CHANGELOG-v1.3.0.txt 버전별 텍스트 로그
+   └─ CHANGELOG-v1.3.1.txt
 ```
 
 ## 새 버전 내기
