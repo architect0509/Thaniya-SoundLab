@@ -4,7 +4,7 @@
  * - VERSION 은 install/update/release.js 가 새 버전을 낼 때 자동으로 바꿔요
  * - 새 버전 알림은 install/update/ 의 Update Notifier 가 version.json 을 보고 띄워요
  */
-const VERSION = 'v1.2.0-202611260156';
+const VERSION = 'v1.3.0-202611260559';
 const CACHE = 'tsl-' + VERSION;
 const FONT_CACHE = 'tsl-fonts';
 
@@ -14,14 +14,17 @@ const CORE = [
   './edit.html',
   './mypage.html',
   './humming-composer.html',
-  './app.css',
-  './app.js',
-  './mypage.js',
-  './fullscreen.js',
-  './store.js',
-  './guide.js',
-  './thaniya-intro.js',
-  './lame.min.js',
+  './css/app.css',
+  './js/app.js',
+  './js/mypage.js',
+  './js/fullscreen.js',
+  './js/store.js',
+  './js/guide.js',
+  './js/thaniya-intro.js',
+  './js/lame.min.js',
+  './js/loader.js',
+  './baby/index.html',
+  './baby/manifest.webmanifest',
   './Asset/icon.png',
   './Asset/ThaniyaLogo.png',
   './install/install.css',
